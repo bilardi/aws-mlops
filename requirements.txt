@@ -1,0 +1,4 @@
+boto3
+sagemaker
+s3fs
+pandas

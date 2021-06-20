@@ -1,0 +1,16 @@
+*#*#
+*~
+*.pyc
+__pycache__
+aws_mlops.egg-info
+build
+dist
+.serverless
+node_modules
+package-lock.json
+example
+.aws
+.cache
+.ipython
+.jupyter
+.local
