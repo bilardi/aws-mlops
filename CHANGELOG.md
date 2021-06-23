@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2021-06-23
+
+### Added
+- the data storage class
+
 ## [0.0.1] - 2021-06-23
 
 ### Added
@@ -14,5 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the init files of package and tests
 - the documentation by sphinx
 
-[Unreleased]: https://github.com/bilardi/aws-saving/compare/v0.0.0...HEA0
+[Unreleased]: https://github.com/bilardi/aws-saving/compare/v0.0.2...HEA0
+[0.0.2]: https://github.com/bilardi/aws-saving/releases/tag/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/bilardi/aws-saving/releases/tag/v0.0.1

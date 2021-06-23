@@ -1,0 +1,16 @@
+{
+    "environment": "studio",
+    "application": "aws-mlops",
+    "estimator_input": {
+        "environment": "studio",
+        "application": "aws-mlops",
+        "container": {
+            "framework": "xgboost",
+            "version": "latest"
+        }
+    },
+    "tuner_input": {
+        "environment": "studio",
+        "application": "aws-mlops"
+    }
+}
