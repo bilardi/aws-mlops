@@ -90,7 +90,7 @@ class DataStorage():
                 dataframe converted into csv format or nothing
         """
         if not dataframe.empty:
-            return dataframe.to_csv(path, header=header, index=index)
+            return dataframe.to_csv(path, header=header, index=index)#.encode()
         return
     def local_save(self, dataframe, path='/opt/ml/processing/train', filename='train.csv', header=True, index=False):
         """
@@ -173,7 +173,7 @@ class DataStorage():
             s3_url = self.s3_url
         # save a file for each column in columns
         for column in columns:
-            self.save_on_s3(test[column], f'{column}.csv', s3_url, header=True, index=False)#, header=False, index=False)
+            self.save_on_s3(test[column], f'{column}.csv', s3_url, header=True, index=False)
             test.drop([column], axis=1, inplace=True)
         # columns names
         columns_names = pd.DataFrame({"list_columns":test.columns})

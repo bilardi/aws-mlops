@@ -95,14 +95,22 @@ class TestService(unittest.TestCase, DataStorage):
         self.ds.local_save(df_test, self.tmp, 'test.csv', header=False)
         [columns_names, target, identifier] = self.ds.restore_test()
         self.assertEqual(columns_names['list_columns'][0], 'col_3')
-        # df_test_restored = self.ds.local_read(self.tmp, 'test.csv')
+
+        # first row preserved
         df_test_restored = pd.read_csv(os.path.join(self.tmp, 'test.csv'), names=list(columns_names['list_columns']))
-        # columns = ['target', 'identifier'] + list(columns_names['list_columns'])
         df_merged = pd.concat([target, identifier, df_test_restored], axis=1)
-        # df_merge.columns = columns
         self.assertEqual(df_merged['target'][0], 0)
         self.assertEqual(df_merged['identifier'][0], 'a')
         self.assertEqual(df_merged['col_3'][0], 'f')
+
+        # first row overwritten
+        df_test_restored = self.ds.local_read(self.tmp, 'test.csv')
+        columns = ['target', 'identifier'] + list(columns_names['list_columns'])
+        df_merged = pd.concat([target, identifier, df_test_restored], axis=1)
+        df_merged.columns = columns
+        self.assertEqual(df_merged['target'][0], 0)
+        self.assertEqual(df_merged['identifier'][0], 'a')
+        self.assertEqual(df_merged['col_3'][0], 's')
 
         # print('prepared')
         # print(df_prepared)

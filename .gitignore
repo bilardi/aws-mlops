@@ -8,7 +8,6 @@ dist
 .serverless
 node_modules
 package-lock.json
-example
 .aws
 .cache
 .ipython
