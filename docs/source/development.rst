@@ -35,7 +35,7 @@ Improve your python scripts for processing by Jupyter
 .. code-block:: bash
 
     cd aws-mlops/
-    docker run --rm -p 8889:8888 -e JUPYTER_ENABLE_LAB=yes -v $HOME/.aws/credentials:/home/jovyan/.aws/credentials:ro -v "$PWD":/home/jovyan/ jupyter/datascience-notebook
+    docker run --rm -p 8889:8888 -e JUPYTER_ENABLE_LAB=yes -e AWS_PROFILE=your-account -v $HOME/.aws/credentials:/home/jovyan/.aws/credentials:ro -v "$PWD":/home/jovyan/ jupyter/datascience-notebook
 
 You can find two ipynb files in the folder named example: they can help you to improve your code for the processing steps.
 

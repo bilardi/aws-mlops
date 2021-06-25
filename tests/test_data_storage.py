@@ -112,14 +112,31 @@ class TestService(unittest.TestCase, DataStorage):
         self.assertEqual(df_merged['identifier'][0], 'a')
         self.assertEqual(df_merged['col_3'][0], 's')
 
-        # print('prepared')
-        # print(df_prepared)
-        # df_diff = pd.concat([df_prepared, df_merged]).drop_duplicates(keep=False)
-        # print('df_diff')
-        # print(df_diff)
-        # print('concat')
-        # print(pd.concat([df_prepared, df_merged]))
-        # self.assertTrue(df_diff.empty)
- 
+    def test_convert_dtypes(self):
+        data = {'i': [0, 1, 2, 3], 'f': [0.1, 0.2, 0.3, 0.4], 'b': [True, False, True, False],
+                'is': ['0', '1', '2', '3'], 'fs': ['0.1', '0.2', '0.3', '0.4'], 'bs': ['True', 'False', 'True', 'False']}
+        df_prepared = pd.DataFrame.from_dict(data)
+        dtypes = {'is':'int', 'fs':'float', 'bs':'bool'}
+        self.assertEqual(df_prepared['i'].sum(), 6)
+        self.assertEqual(df_prepared['i'].dtypes, 'int')
+        self.assertEqual(df_prepared['f'].sum(), 1.0)
+        self.assertEqual(df_prepared['f'].dtypes, 'float64')
+        self.assertEqual(df_prepared['b'].dtypes, 'bool')
+        self.assertTrue(df_prepared['b'][0])
+        self.assertFalse(df_prepared['b'][1])
+        self.assertEqual(df_prepared['is'].sum(), '0123')
+        self.assertEqual(df_prepared['fs'].sum(), '0.10.20.30.4')
+        self.assertTrue(df_prepared['bs'][0])
+        self.assertTrue(df_prepared['bs'][1])
+        df_converted = self.ds.convert_dtypes(dtypes, df_prepared)
+        self.assertEqual(df_converted['i'].sum(), 6)
+        self.assertEqual(df_converted['f'].sum(), 1.0)
+        self.assertTrue(df_converted['b'][0])
+        self.assertFalse(df_converted['b'][1])
+        self.assertEqual(df_converted['is'].sum(), 6)
+        self.assertEqual(df_converted['fs'].sum(), 1.0)
+        self.assertTrue(df_converted['bs'][0])
+        self.assertFalse(df_converted['bs'][1])
+
 if __name__ == '__main__':
     unittest.main()

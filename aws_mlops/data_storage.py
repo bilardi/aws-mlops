@@ -196,3 +196,24 @@ class DataStorage():
         for dataset_name in datasets_names:
             datasets.append(self.restore(f'{dataset_name}.csv', s3_url=s3_url))
         return datasets
+
+    def convert_dtypes(self, dtypes, dataframe):
+        """
+        converts the dataframe column dtype with that specified
+            Arguments:
+                dtypes (dict): dictionary column: dtype
+                train (pandas.DataFrame): dataframe with the columns of dtypes
+            Returns:
+                pandas.DataFrame converted
+        """
+        for column in dtypes.keys():
+            if dtypes[column] in ['int64', 'float64', 'int', 'float']:
+                dataframe[column] = pd.to_numeric(dataframe[column])
+            elif dtypes[column] == 'datetime':
+                dataframe[column] = pd.to_datetime(dataframe[column])
+            elif dtypes[column] in ['bool', 'boolean']:
+                bool_map = {'True': True, 'False': False}
+                dataframe[column] = dataframe[column].map(bool_map)
+            else:
+                dataframe[column] = dataframe[column].astype(dtypes[column]) 
+        return dataframe.convert_dtypes()
