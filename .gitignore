@@ -8,9 +8,13 @@ dist
 .serverless
 node_modules
 package-lock.json
+.env
 .aws
 .cache
 .ipython
 .jupyter
+.ipynb_checkpoints
 .local
 *.csv
+studio.*.json
+example/processing

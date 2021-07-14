@@ -74,7 +74,7 @@ class DataStorage():
                 pandas.DataFrame without header
         """
         if s3_url is None:
-            s3_url = self.s3_url            
+            s3_url = self.s3_url
         print('Reading data from {}/{} {} header, {} index column and {} low_memory'.format(s3_url, filename, 'without' if header is None else 'with', 'without' if index_col is [None, False] else 'with', 'without' if low_memory is False else 'with'))
         with self.s3.open(f'{s3_url}/{filename}') as fs:
             return self.read(fs, header, index_col, low_memory)
@@ -157,7 +157,7 @@ class DataStorage():
                 pandas.DataFrame
         """
         if not black_list:
-            black_list = ['ContinuousParameter', 'IntegerParameter', 'os', 'git', 'datetime', 'get_commit', 'create_ts', 'create_ts', 'slash_to_dash', 'tuner_input']
+            black_list = ['os', 'git', 'datetime', 'definitions_config', 'get_git_details', 'create_ts', 'slash_to_dash', 'dictionary_from_module', 'setup_default_session']
         columns_names = [item for item in dir(config) if not item.startswith("__") and not item in (black_list)]
         return self.create_dataframe(config, columns_names)
     def save_test(self, test, columns=['target', 'identifier'], s3_url=None):
@@ -196,7 +196,6 @@ class DataStorage():
         for dataset_name in datasets_names:
             datasets.append(self.restore(f'{dataset_name}.csv', s3_url=s3_url))
         return datasets
-
     def convert_dtypes(self, dtypes, dataframe):
         """
         converts the dataframe column dtype with that specified

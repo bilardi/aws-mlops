@@ -1,16 +1,23 @@
 {
-    "environment": "studio",
-    "application": "aws-mlops",
-    "estimator_input": {
-        "environment": "studio",
-        "application": "aws-mlops",
+    "last_output": {
+        "Parameter": "from-event",
+        "service": "mlops",
+        "source_bucket": "your-bucket",
+        "container_input": {
+            "container": {
+                "framework": "xgboost",
+                "version": "latest"
+            }
+        }
+    },
+    "ExecutionName": "mlops-studio-modeling-2021-07-08T22-06-02076074",
+    "ExecutionId": "arn:aws:states:eu-west-1:1234567890:execution:mlops-studio-modeling:mlops-studio-modeling-2021-07-08T22-06-02076074",
+    "StateName": "GoToEnd",
+    "service": "mlops",
+    "container_input": {
         "container": {
             "framework": "xgboost",
             "version": "latest"
         }
-    },
-    "tuner_input": {
-        "environment": "studio",
-        "application": "aws-mlops"
     }
 }
