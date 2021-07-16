@@ -15,7 +15,7 @@ If you want to use AWS CDK and AWS CodePipeline, you can see these repositories 
 
 When you add the data management in your CD cycle, you have to add the data versioning:
 
-* the system improved in the folder named example, it provides s3 key with environment, branch, commit and datatime
+* the system improved in the folder named example, it provides s3 key with branch, environment, commit and datatime
 * so you can have a **complete environment for** each combo of them
 
 This is important to commit any change for the analysis step.
@@ -26,8 +26,12 @@ Run tests
 .. code-block:: bash
 
     cd aws-mlops/
-    pip3 install --upgrade -r requirements.txt
+    npm install
+    pip3 install --upgrade -r example/requirements.txt
     python3 -m unittest discover -v
+    # even with functional and infrastructure tests
+    export AWS_PROFILE=your-account
+    bash example/test.sh
 
 Improve your python scripts for processing by Jupyter
 #####################################################
@@ -35,9 +39,21 @@ Improve your python scripts for processing by Jupyter
 .. code-block:: bash
 
     cd aws-mlops/
-    docker run --rm -p 8889:8888 -e JUPYTER_ENABLE_LAB=yes -e AWS_PROFILE=your-account -v $HOME/.aws/credentials:/home/jovyan/.aws/credentials:ro -v "$PWD":/home/jovyan/ jupyter/datascience-notebook
+    docker run --rm -p 8888:8888 -e JUPYTER_ENABLE_LAB=yes -e AWS_PROFILE=your-account -v $HOME/.aws/credentials:/home/jovyan/.aws/credentials:ro -v "$PWD":/home/jovyan/ jupyter/datascience-notebook
 
 You can find two ipynb files in the folder named example: they can help you to improve your code for the processing steps.
+
+Test your python scripts
+########################
+
+If you did never push an image on your repository, run the commands of **Deploy on AWS** paragraph before run the docker.
+
+.. code-block:: bash
+
+    cd aws-mlops/
+    export AWS_PROFILE=your-account
+    export STAGE=development
+    bash example/test_docker.sh
 
 Deploy on AWS
 #############
@@ -47,8 +63,7 @@ Deploy on AWS
     cd aws-mlops/
     export AWS_PROFILE=your-account
     export STAGE=development
-    SLS_DEBUG=* sls deploy --stage $STAGE
-    bash example/build_image.sh
+    bash example/deploy.sh
 
 Remove on AWS
 #############

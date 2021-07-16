@@ -5,8 +5,8 @@
 ### Installation
 
 ```sh
-git clone https://github.com/bilardi/aws-tool-comparison
-cd aws-tool-comparison/docs
+git clone https://github.com/bilardi/aws-mlops
+cd aws-mlops/docs
 pip3 install --upgrade -r requirements.txt # install your dependences
 sphinx-quickstart
 ```
@@ -16,12 +16,12 @@ sphinx-quickstart
 For testing the web changes,
 
 ```sh
-cd aws-tool-comparison/docs
+cd aws-mlops/docs
 make html
-# go to your browser at file://path/of/the/folder/of/aws-tool-comparison/docs/build/html/index.html
+# go to your browser at file://path/of/the/folder/of/aws-mlops/docs/build/html/index.html
 ```
 
-For testing the pdf changes, check if there are some lines into [conf.py](https://github.com/bilardi/aws-tool-comparison/blob/master/docs/source/conf.py)
+For testing the pdf changes, check if there are some lines into [conf.py](https://github.com/bilardi/aws-mlops/blob/master/docs/source/conf.py)
 
 ```sh
 extensions = ['rst2pdf.pdfbuilder']
@@ -35,7 +35,7 @@ pdf_documents = [('index', u'rst2pdf', u'Sample rst2pdf doc', u'Your Name'),]
 and then type
 
 ```sh
-cd aws-tool-comparison/docs
+cd aws-mlops/docs
 sphinx-build -b pdf source build/pdf
-open build/pdf/aws-tool-comparison.pdf
+open build/pdf/aws-mlops.pdf
 ```

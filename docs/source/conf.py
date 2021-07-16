@@ -22,8 +22,8 @@ copyright = '2021, Alessandra Bilardi'
 author = 'Alessandra Bilardi'
 
 # The full version, including alpha/beta/rc tags
-version = '0.0.3'
-release = '0.0.3'
+version = '0.1.0'
+release = '0.1.0'
 
 # specify the master doc, otherwise the build at read the docs fails
 master_doc = 'index'
@@ -33,7 +33,7 @@ master_doc = 'index'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = ['nbsphinx']
 #extensions = ['rst2pdf.pdfbuilder']
 #pdf_documents = [('index', u'aws-tool-comparison', u'AWS tool comparison', u'Alessandra Bilardi'),]
 
