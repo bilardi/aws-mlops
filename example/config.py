@@ -4,10 +4,16 @@ from datetime import datetime
 
 import boto3
 import sagemaker
+region_name='eu-west-1'
+if os.environ.get('AWS_REGION'):
+    region_name = os.environ.get('AWS_REGION')
 if os.path.isdir('/Users') or os.path.isdir('/home/jovyan/'):
-    boto3.setup_default_session(profile_name='your-account', region_name='eu-west-1')
+    profile_name='your-account'
+    if os.environ.get('AWS_PROFILE'):
+        profile_name = os.environ.get('AWS_PROFILE')
+    boto3.setup_default_session(profile_name=profile_name, region_name=region_name)
 else:
-    boto3.setup_default_session()
+    boto3.setup_default_session(region_name=region_name)
 
 def get_git_details():
     repo = git.Repo(search_parent_directories=True)
@@ -29,10 +35,14 @@ def dictionary_from_module(module):
 # common input
 service = 'mlops' # name of your service
 environment = 'studio' # stanging / production
-ecr_repository_name = f'{service}-{environment}-processing'
+if os.environ.get('STAGE'):
+    environment = os.environ.get('STAGE')
 [ branch, commit ] = get_git_details()
+repo_url = 'https://github.com/bilardi/aws-mlops.git'
+repo_name = 'aws-mlops'
 #branch = 'alessandra'
 #commit = 'bc7ed76e07967efaf3993b437a2d65b3ce28e19c'
+ecr_repository_name = f'{service}-{environment}-processing'
 ts = create_ts()
 
 # environment details of Step Functions execution
@@ -127,8 +137,8 @@ processing_input = {
 # input for processing
 auto_input = {
     'arguments': [
-        '--repo-url', 'https://github.com/bilardi/aws-mlops.git',
-        '--repo-name', 'aws-mlops',
+        '--repo-url', repo_url,
+        '--repo-name', repo_name,
         '--repo-branch', branch,
         '--config-path', 'example.config',
         '--config-item', 'auto_input',
@@ -168,8 +178,8 @@ auto_input = {
 }
 pretraining_input = {
     'arguments': [
-        '--repo-url', 'https://github.com/bilardi/aws-mlops.git',
-        '--repo-name', 'aws-mlops',
+        '--repo-url', repo_url,
+        '--repo-name', repo_name,
         '--repo-branch', branch,
         '--config-path', 'example.config',
         '--config-item', 'pretraining_input',
@@ -217,8 +227,8 @@ pretraining_input = {
 }
 preinference_input = {
     'arguments': [
-        '--repo-url', 'https://github.com/bilardi/aws-mlops.git',
-        '--repo-name', 'aws-mlops',
+        '--repo-url', repo_url,
+        '--repo-name', repo_name,
         '--repo-branch', branch,
         '--config-path', 'example.config',
         '--config-item', 'preinference_input',
@@ -334,8 +344,8 @@ training_input = {
 # input for reporting
 testing_input = {
     'arguments': [
-        '--repo-url', 'https://github.com/bilardi/aws-mlops.git',
-        '--repo-name', 'aws-mlops',
+        '--repo-url', repo_url,
+        '--repo-name', repo_name,
         '--repo-branch', branch,
         '--config-path', 'example.config',
         '--config-item', 'testing_input',
@@ -384,8 +394,8 @@ testing_input = {
 }
 reporting_input = {
     'arguments': [
-        '--repo-url', 'https://github.com/bilardi/aws-mlops.git',
-        '--repo-name', 'aws-mlops',
+        '--repo-url', repo_url,
+        '--repo-name', repo_name,
         '--repo-branch', branch,
         '--config-path', 'example.config',
         '--config-item', 'reporting_input',

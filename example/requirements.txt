@@ -1,0 +1,7 @@
+aws-mlops
+boto3
+GitPython
+s3fs==2021.6.0
+sagemaker
+sklearn
+pandas
