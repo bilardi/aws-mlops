@@ -17,4 +17,6 @@ package-lock.json
 .local
 *.csv
 studio.*.json
+default.*.json
+!default.repository.policy.json
 example/processing
