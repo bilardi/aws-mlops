@@ -1,0 +1,205 @@
+service: mlops
+frameworkVersion: ^2.46.0
+disabledDeprecations:
+  - CLI_OPTIONS_SCHEMA
+provider:
+  name: aws
+  stage: ${opt:stage, 'development'}
+  runtime: python3.6
+  region: ${opt:region, 'eu-west-1'}
+  memorySize: 512
+  timeout: 300
+  lambdaHashingVersion: 20201221
+  stackTags:
+    Application: MLOps
+    Environment: ${self:provider.stage}
+    Saving: ${self:custom.savingTags.saving.${self:provider.stage}, self:custom.savingTags.saving.default}
+    Delete: ${self:custom.savingTags.delete.${self:provider.stage}, self:custom.savingTags.delete.default} 
+  tags:
+    Application: MLOps
+    Environment: ${self:provider.stage}
+    Saving: ${self:custom.savingTags.saving.${self:provider.stage}, self:custom.savingTags.saving.default}
+    Delete: ${self:custom.savingTags.delete.${self:provider.stage}, self:custom.savingTags.delete.default}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ssm:Describe*
+            - ssm:Get*
+            - ssm:List*
+            - ssm:Put*
+            - ssm:Delete*
+          Resource: "arn:aws:ssm:${self:provider.region}:#{AWS::AccountId}:parameter/${self:service}/${self:provider.stage}/*"
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource:
+            - arn:aws:s3:::sagemaker-${self:provider.region}-#{AWS::AccountId}
+            - arn:aws:s3:::sagemaker-${self:provider.region}-#{AWS::AccountId}/*
+        - Effect: Allow
+          Action:
+            - lambda:Invoke*
+            - sagemaker:Describe*
+            - iam:PassRole
+            - s3:List*
+            - s3:Get*
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - states:List*
+            - states:Describe*
+            - states:StartExecution
+          Resource: "arn:aws:states:${self:provider.region}:#{AWS::AccountId}:*:*"
+  environment:
+    stage: ${self:provider.stage}
+custom:
+  pythonRequirements:
+    pythonBin: /usr/bin/python3
+  SNStopicName: ""
+
+  stage:
+    production: production
+    default: default
+  functionName:
+    production: ${self:service}
+    default: ${self:service}-${self:provider.stage}
+  bucketName:
+    production: your-bucket-production
+    default: your-bucket-tmp
+  savingTags:
+    saving:
+      production: Disabled
+      default: Enabled
+    delete:
+      production: '0 18 30 2 .' # for added safety, a non-existent day
+      staging: '0 18 30 2 .' # for added safety, a non-existent day
+      default: '0 22 . . .' # for added safety, a non-existent day
+
+package:
+  patterns:
+    - 'aws_mlops/**'
+    - '!node_modules/**'
+    - '!example/**'
+    - '!tests/**'
+    - '!docs/**'
+    - '!.serverless/**'
+    - '!.local/**'
+    - '!.ipython/**'
+    - '!.cache/**'
+    - '!.aws/**'
+    - '!.jupyter/**'
+    - '!.git/**'
+
+plugins:
+  - serverless-python-requirements
+  - serverless-step-functions
+  - serverless-pseudo-parameters
+
+functions:
+  bestJob:
+    name: ${self:custom.functionName.${self:provider.stage}, self:custom.functionName.default}-get-best-training-job-details
+    handler: aws_mlops/get_best_job.main
+  configManager:
+    name: ${self:custom.functionName.${self:provider.stage}, self:custom.functionName.default}-config-manager
+    handler: aws_mlops/config_manager.main
+
+stepFunctions:
+  stateMachines:
+    Processing:
+      dependsOn: StateMachineRole
+      name: ${self:custom.functionName.${self:provider.stage}, self:custom.functionName.default}-processing
+      role: 
+        Fn::GetAtt: ["StateMachineRole", "Arn"]
+      definition: ${file(./${self:custom.stage.${self:provider.stage}, self:custom.stage.default}.processing.definition.json)}
+    Modeling:
+      dependsOn: StateMachineRole
+      name: ${self:custom.functionName.${self:provider.stage}, self:custom.functionName.default}-modeling
+      role: 
+        Fn::GetAtt: ["StateMachineRole", "Arn"]
+      definition: ${file(./${self:custom.stage.${self:provider.stage}, self:custom.stage.default}.modeling.definition.json)}
+    Prediction:
+      dependsOn: StateMachineRole
+      name: ${self:custom.functionName.${self:provider.stage}, self:custom.functionName.default}-prediction
+      role: 
+        Fn::GetAtt: ["StateMachineRole", "Arn"]
+      definition: ${file(./${self:custom.stage.${self:provider.stage}, self:custom.stage.default}.prediction.definition.json)}
+    MLOps:
+      dependsOn: StateMachineRole
+      name: ${self:custom.functionName.${self:provider.stage}, self:custom.functionName.default}-mlops
+      role: 
+        Fn::GetAtt: ["StateMachineRole", "Arn"]
+      definition: ${file(./${self:custom.stage.${self:provider.stage}, self:custom.stage.default}.mlops.definition.json)}
+
+resources:
+  Description: ${self:service} - ${self:provider.stage}
+  Resources:
+    StateMachineRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+                - sagemaker.amazonaws.com
+            Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+          - "arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess"
+          - "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"          
+        Policies:
+        - PolicyName: ParentStepFunctionExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Action:
+                - states:StartExecution
+                - states:DescribeExecution
+                - states:StopExecution
+                - events:PutTargets
+                - events:PutRule
+                - events:DescribeRule
+                - sagemaker:Create*
+                - sagemaker:Delete*
+                - sagemaker:Describe*
+                - sagemaker:List*
+                - sagemaker:Stop*
+                - sagemaker:Update*
+                - lambda:InvokeFunction
+                - iam:PassRole
+                - s3:List*
+                - s3:Get*
+                - ecr:Get*
+                - ecr:Batch*
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - logs:CreateLogGroup
+                - logs:DescribeLogStreams             
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource:
+                - arn:aws:s3:::sagemaker-${self:provider.region}-#{AWS::AccountId}
+                - arn:aws:s3:::sagemaker-${self:provider.region}-#{AWS::AccountId}/*
+    Repository:
+      Type: AWS::ECR::Repository
+      Properties:
+        ImageTagMutability: IMMUTABLE
+        # LifecyclePolicy: 
+        #   LifecyclePolicy
+        RepositoryName: ${self:custom.functionName.${self:provider.stage}, self:custom.functionName.default}-processing
+        RepositoryPolicyText: ${file(./${self:custom.stage.${self:provider.stage}, self:custom.stage.default}.repository.policy.json)}
+        Tags:
+          - Key: Application
+            Value: ${self:service}
+          - Key: Environment
+            Value: ${self:provider.stage}
+          - Key: Saving
+            Value: ${self:custom.savingTags.saving.${self:provider.stage}, self:custom.savingTags.saving.default}
+          - Key: Delete
+            Value: ${self:custom.savingTags.delete.${self:provider.stage}, self:custom.savingTags.delete.default} 
