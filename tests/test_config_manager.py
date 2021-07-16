@@ -1,8 +1,7 @@
 import unittest
 import json
 from botocore.exceptions import ClientError
-
-import aws_mlops.config_manager as cm
+from aws_mlops.config_manager import ConfigManager
 
 class S3Client():
     go = None
@@ -76,46 +75,48 @@ class SfnClient():
         if isinstance(executionArn, str):
             return self.de
 
-class TestManageConfig(unittest.TestCase):
+class TestManageConfig(unittest.TestCase, ConfigManager):
+    cm = None
     event = None
 
     def __init__(self, *args, **kwargs):
-        cm.s3 = S3Client()
-        cm.ssm = SsmClient()
-        cm.sfn = SfnClient()
+        self.cm = ConfigManager()
+        self.cm.s3 = S3Client()
+        self.cm.ssm = SsmClient()
+        self.cm.sfn = SfnClient()
         with open('tests/config.json') as json_file:
             self.event = json.load(json_file)
         unittest.TestCase.__init__(self, *args, **kwargs)
 
-    def test_main(self):
+    def test_run(self):
         self.assertTrue('service' in self.event)
         self.assertFalse('ModelName' in self.event)
 
-        cm.s3.goe = True
-        result = cm.main(self.event)
-        self.assertEqual(result['body']['Parameter'], 'from-event') # get-event
-        self.assertTrue('Model', result['body']) # get-execution
-        self.assertFalse('VersionId' in result['body']) # get-s3
+        self.cm.s3.goe = True
+        result = self.cm.run(self.event)
+        self.assertEqual(result['Parameter'], 'from-event') # get-event
+        self.assertTrue('Model', result) # get-execution
+        self.assertFalse('VersionId' in result) # get-s3
 
-        cm.s3.goe = False
-        result = cm.main(self.event)
-        self.assertEqual(result['body']['Parameter'], 'from-event') # get-event
-        self.assertTrue('Model', result['body']) # get-execution
-        self.assertFalse('VersionId' in result['body']) # get-s3
+        self.cm.s3.goe = False
+        result = self.cm.run(self.event)
+        self.assertEqual(result['Parameter'], 'from-event') # get-event
+        self.assertTrue('Model', result) # get-execution
+        self.assertFalse('VersionId' in result) # get-s3
 
         del(self.event['last_output']['Parameter'])
 
-        cm.s3.goe = True
-        result = cm.main(self.event)
-        self.assertEqual(result['body']['Parameter'], 'Initial') # get-execution
-        self.assertTrue('Model', result['body']) # get-execution
-        self.assertFalse('VersionId' in result['body']) # get-s3
+        self.cm.s3.goe = True
+        result = self.cm.run(self.event)
+        self.assertEqual(result['Parameter'], 'Initial') # get-execution
+        self.assertTrue('Model', result) # get-execution
+        self.assertFalse('VersionId' in result) # get-s3
 
-        cm.s3.goe = False
-        result = cm.main(self.event)
-        self.assertEqual(result['body']['Parameter'], 'from-s3') # get-s3
-        self.assertTrue('Model', result['body']) # get-execution
-        self.assertFalse('VersionId' in result['body']) # get-s3
+        self.cm.s3.goe = False
+        result = self.cm.run(self.event)
+        self.assertEqual(result['Parameter'], 'from-s3') # get-s3
+        self.assertTrue('Model', result) # get-execution
+        self.assertFalse('VersionId' in result) # get-s3
 
 if __name__ == '__main__':
     unittest.main()

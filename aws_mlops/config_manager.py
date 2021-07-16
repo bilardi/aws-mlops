@@ -1,6 +1,9 @@
-"""Methods for managing the states inputs
+"""The class for managing the states inputs and configuration and model.tar.gz files
 
-The methods are loaded on a lambda and the handler is:
+The class needs the properties:
+    'event' (dict): with ExecutionId and ExecutionName parameters [and last_output with other all parameters]
+
+You can load it on a lambda and the handler is:
     aws_mlops/config_manager.main
 
 # license MIT
@@ -10,125 +13,163 @@ The methods are loaded on a lambda and the handler is:
 import boto3
 import json
 from botocore.exceptions import ClientError
-ssm = boto3.client('ssm')
-s3 = boto3.client('s3')
-sfn = boto3.client('stepfunctions')
 
-def get_config_by_ssm(parameter_name):
-    """
-    gets the configuration saved on ssm
-        Arguments:
-            parameter_name (str): name of execution of state machine
-        Returns:
-            dictionary of config
-    """
-    try:
-        details = ssm.get_parameter(Name=parameter_name)
-    except ClientError:
-        return {}
-    return json.loads(details['Parameter']['Value'])
+class ConfigManager():
+    s3 = None
+    ssm = None
+    sfn = None
+    def __init__(self):
+        self.s3 = boto3.client('s3')
+        self.ssm = boto3.client('ssm')
+        self.sfn = boto3.client('stepfunctions')
 
-def save_config_by_ssm(parameter_name, value):
-    """
-    saves the configuration merged with the last OutputPath
-        Arguments:
-            parameter_name (str): name of execution of state machine
-            value (dict): dictionary of the configuration
-    """
-    result = ssm.put_parameter(Name=parameter_name, Value=json.dumps(value), Type='String', Overwrite=True)
-    if result['Version'] >= 1:
-        return
-    raise ValueError(value)
+    def get_config_by_ssm(self, parameter_name):
+        """
+        gets the configuration saved on ssm
+            Arguments:
+                parameter_name (str): name of execution of state machine
+            Returns:
+                dictionary of config
+        """
+        try:
+            details = self.ssm.get_parameter(Name=parameter_name)
+        except ClientError:
+            return {}
+        return json.loads(details['Parameter']['Value'])
 
-def remove_config_by_ssm(parameter_name):
-    """
-    removes the configuration on ssm
-        Arguments:
-            parameter_name (str): name of execution of state machine
-    """
-    result = ssm.delete_parameter(Name=parameter_name)
-    if 'ResponseMetadata' in result and 'HTTPStatusCode' in result['ResponseMetadata'] and result['ResponseMetadata']['HTTPStatusCode'] == 200:
-        return
-    raise ValueError(result)
+    def save_config_by_ssm(self, parameter_name, value):
+        """
+        saves the configuration merged with the last OutputPath
+            Arguments:
+                parameter_name (str): name of execution of state machine
+                value (dict): dictionary of the configuration
+        """
+        return self.ssm.put_parameter(Name=parameter_name, Value=json.dumps(value), Type='String', Overwrite=True)
 
-def get_config_by_s3(bucket, key):
-    """
-    gets the configuration saved on s3
-        Arguments:
-            bucket (str): name of bucket
-            key (str): path and filename
-        Returns:
-            dictionary of config
-    """
-    try:
-        details = s3.get_object(Bucket=bucket, Key=key)
-    except ClientError:
-        return {}
-    return json.loads(details['Body'].read())
+    def remove_config_by_ssm(self, parameter_name):
+        """
+        removes the configuration on ssm
+            Arguments:
+                parameter_name (str): name of execution of state machine
+        """
+        return self.ssm.delete_parameter(Name=parameter_name)
 
-def save_config_by_s3(bucket, key, value):
-    """
-    saves the configuration merged with the last OutputPath
-        Arguments:
-            bucket (str): name of bucket
-            key (str): path and filename
-            value (dict): dictionary of the configuration
-    """
-    result = s3.put_object(
-        ACL='bucket-owner-full-control',
-        Body=json.dumps(value).encode('ascii'), #b''
-        Bucket=bucket,
-        Key=key
-    )
-    if 'VersionId' in result and isinstance('VersionId', str):
-        return
+    def get_config_by_s3(self, bucket, key):
+        """
+        gets the configuration saved on s3
+            Arguments:
+                bucket (str): name of bucket
+                key (str): path and filename
+            Returns:
+                dictionary of config
+        """
+        try:
+            details = self.s3.get_object(Bucket=bucket, Key=key)
+        except ClientError:
+            return {}
+        return json.loads(details['Body'].read())
 
-def remove_config_by_s3(bucket, key):
-    """
-    removes the configuration on s3
-        Arguments:
-            bucket (str): name of bucket
-            key (str): path and filename
-    """
-    result = s3.delete_object(Bucket=bucket, Key=key)
-    if 'VersionId' in result and isinstance('VersionId', str):
-        return
+    def save_config_by_s3(self, bucket, key, value):
+        """
+        saves the configuration merged with the last OutputPath
+            Arguments:
+                bucket (str): name of bucket
+                key (str): path and filename
+                value (dict): dictionary of the configuration
+        """
+        return self.s3.put_object(
+            ACL='bucket-owner-full-control',
+            Body=json.dumps(value).encode('ascii'), #b''
+            Bucket=bucket,
+            Key=key
+        )
 
-def get_config_by_sfn(execution_arn):
-    """
-    gets the configuration passed at the start the state machine
-        Arguments:
-            execution_arn (str): ARN of execution of state machine 
-        Returns:
-            dictionary of config
-    """
-    execution_details = sfn.describe_execution(executionArn=execution_arn)
-    return json.loads(execution_details['input'])
+    def remove_config_by_s3(self, bucket, key):
+        """
+        removes the configuration on s3
+            Arguments:
+                bucket (str): name of bucket
+                key (str): path and filename
+        """
+        return self.s3.delete_object(Bucket=bucket, Key=key)
+
+    def get_config_by_sfn(self, execution_arn):
+        """
+        gets the configuration passed at the start the state machine
+            Arguments:
+                execution_arn (str): ARN of execution of state machine 
+            Returns:
+                dictionary of config
+        """
+        execution_details = self.sfn.describe_execution(executionArn=execution_arn)
+        return json.loads(execution_details['input'])
+
+    def get_details(self, event):
+        """
+        gets configuration
+            Arguments:
+                event (dict): with ExecutionName parameter [and last_output with other all parameters]
+            Returns:
+                list of parameter_name, bucket, key and dict of configuration
+        """
+        key = event['ExecutionName'].replace('-','/',3)
+        parameter_name = '/' + key
+        if 'source_bucket' in event['last_output']:
+            bucket = event['last_output']['source_bucket']
+        else:
+            bucket = self.get_config_by_ssm(parameter_name)
+        config = self.get_config_by_s3(bucket, key)
+        if not config:
+            config = self.get_config_by_sfn(event['ExecutionId'])
+        return [ parameter_name, bucket, key, config ]
+
+    def save_details(self, parameter_name, bucket, key, config):
+        """
+        saves position and configuration
+            Arguments:
+                parameter_name (str): path of parameter stored on ssm
+                bucket (str): bucket name
+                key (str): path and filename where to save the dict of configuration
+                config (dict): dict of configuration
+        """
+        self.save_config_by_ssm(parameter_name, bucket)
+        self.save_config_by_s3(bucket, key, config)
+
+    def clean(self, parameter_name, bucket, key, config):
+        """
+        cleans parameter stored and moves files to save
+            Arguments:
+                parameter_name (str): path of parameter stored on ssm
+                bucket (str): bucket name
+                key (str): path and filename where to save the dict of configuration
+                config (dict): dict of configuration
+        """
+        self.remove_config_by_ssm(parameter_name)
+        # move configuration in config.key
+        #if key contains the word mlops or modeling
+        # move config.S3ModelArtifacts in config.key
+        # and remove files in config.key/models
+        #self.remove_config_by_s3(bucket, key)
+
+    def run(self, event):
+        """
+        manages the states inputs
+            Arguments:
+                event (dict): with ExecutionId and ExecutionName parameters [and last_output with other all parameters]
+            Returns:
+                dictionary with statusCode and body
+        """
+        [ parameter_name, bucket, key, config ] = self.get_details(event)
+        config.update(event['last_output'])
+        self.save_details(parameter_name, bucket, key, config)
+        if event['StateName'] == 'GoToEnd':
+            self.clean(parameter_name, bucket, key, config)
+        return config
 
 def main(event, context = None):
-    """
-    manages the states inputs
-        Arguments:
-            event (dict): with ExecutionName parameter [and last_output with other all parameters]
-        Returns:
-            dictionary with statusCode and body
-    """
-    key = event['ExecutionName'].replace('-','/',3)
-    parameter_name = '/' + key
-    if 'source_bucket' in event['last_output']:
-        bucket = event['last_output']['source_bucket']
-    else:
-        bucket = get_config_by_ssm(parameter_name)
-    payload = get_config_by_s3(bucket, key)
-    if not payload:
-        payload = get_config_by_sfn(event['ExecutionId'])
-    payload.update(event['last_output'])
-    save_config_by_ssm(parameter_name, bucket)
-    save_config_by_s3(bucket, key, payload)
-    if event['StateName'] == 'GoToEnd':
-        remove_config_by_ssm(parameter_name)
-#        remove_config_by_s3(bucket, key)
+    cm = ConfigManager()
+    config = cm.run(event)
     return {
         'statusCode': 200,
-        'body': payload
+        'body': config
     }
