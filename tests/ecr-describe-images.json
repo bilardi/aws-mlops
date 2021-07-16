@@ -1,0 +1,52 @@
+{
+    "imageDetails": [
+        {
+            "registryId": "your-account-id",
+            "repositoryName": "mlops-studio-processing",
+            "imageDigest": "sha256:4cddc155ae6e9d913c776a7e6968b82c672f1263b8c5b1d2cfe1877b073f4806",
+            "imageTags": [
+                "b8da9086"
+            ],
+            "imageSizeInBytes": 289249760,
+            "imagePushedAt": 1625131665.0,
+            "imageManifestMediaType": "application/vnd.docker.distribution.manifest.v2+json",
+            "artifactMediaType": "application/vnd.docker.container.image.v1+json"
+        },
+        {
+            "registryId": "your-account-id",
+            "repositoryName": "mlops-studio-processing",
+            "imageDigest": "sha256:030ac062f9d42fd7d62547858cc6c991212cc59d3f97786330c7ec22a643f6a0",
+            "imageTags": [
+                "da0af0ec"
+            ],
+            "imageSizeInBytes": 244604479,
+            "imagePushedAt": 1625120859.0,
+            "imageManifestMediaType": "application/vnd.docker.distribution.manifest.v2+json",
+            "artifactMediaType": "application/vnd.docker.container.image.v1+json"
+        },
+        {
+            "registryId": "your-account-id",
+            "repositoryName": "mlops-studio-processing",
+            "imageDigest": "sha256:780d32ddc685249c79d4bbcd5bfb9ea01dc2a11ca70c0574f9f97a83874624db",
+            "imageTags": [
+                "10b4dd45"
+            ],
+            "imageSizeInBytes": 243731746,
+            "imagePushedAt": 1625121972.0,
+            "imageManifestMediaType": "application/vnd.docker.distribution.manifest.v2+json",
+            "artifactMediaType": "application/vnd.docker.container.image.v1+json"
+        },
+        {
+            "registryId": "your-account-id",
+            "repositoryName": "mlops-studio-processing",
+            "imageDigest": "sha256:69b2d1fdb09e30518ab3cf818d5b1275e833e7d61697faa7ade858a72b9e2c8e",
+            "imageTags": [
+                "99a041c6"
+            ],
+            "imageSizeInBytes": 289274788,
+            "imagePushedAt": 1625130604.0,
+            "imageManifestMediaType": "application/vnd.docker.distribution.manifest.v2+json",
+            "artifactMediaType": "application/vnd.docker.container.image.v1+json"
+        }
+    ]
+}

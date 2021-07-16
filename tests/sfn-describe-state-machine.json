@@ -1,0 +1,6 @@
+{
+    "stateMachineArn": "arn:stateMachine:string",
+    "status": "ACTIVE",
+    "definition": "string",
+    "roleArn": "arn:role:string"
+}
