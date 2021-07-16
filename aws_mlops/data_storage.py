@@ -12,7 +12,7 @@ These properties are mandatory. Here's an example:
     >>> my_dataframe = ds.restore()
     >>> ds.save_test(test, [target_column, identifier_column])
     >>> [test, columns, target, identifier] = ds.restore_test([target_column, identifier_column])
-    >>> ds.save_report([train, validation])
+    >>> ds.restore_test([target_column, identifier_column])
 
 # license MIT
 # author Alessandra Bilardi <alessandra.bilardi@gmail.com>
@@ -156,8 +156,8 @@ class DataStorage():
             Returns:
                 pandas.DataFrame
         """
-        if not black_list:
-            black_list = ['os', 'git', 'datetime', 'definitions_config', 'get_git_details', 'create_ts', 'slash_to_dash', 'dictionary_from_module', 'setup_default_session']
+        if isinstance(config, ModuleType):
+            return self.create_dataframe_from_dict(config.dictionary_from_module(config), black_list)
         columns_names = [item for item in dir(config) if not item.startswith("__") and not item in (black_list)]
         return self.create_dataframe(config, columns_names)
     def save_test(self, test, columns=['target', 'identifier'], s3_url=None):
