@@ -1,0 +1,6 @@
+{
+    "TrainingJobName": "test",
+    "test_input": {
+        "key": "value"
+    }
+}

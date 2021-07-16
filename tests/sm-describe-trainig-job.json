@@ -1,0 +1,208 @@
+{
+    "TrainingJobName": "mlopsstudiotuner20210706T165301-240-beded918",
+    "TrainingJobArn": "arn:aws:sagemaker:eu-west-1:1234567890:training-job/mlopsstudiotuner20210706t165301-240-beded918",
+    "TuningJobArn": "arn:aws:sagemaker:eu-west-1:1234567890:hyper-parameter-tuning-job/mlopsstudiotuner20210706t165301",
+    "ModelArtifacts": {
+        "S3ModelArtifacts": "s3://your-bucket-tmp/aws-mlops/main/8b7b072ad758c2c8a1514242210d82d7cef69f02/2021-07-06-18-07-02/models/mlopsstudiotuner20210706T165301-240-beded918/output/model.tar.gz"
+    },
+    "TrainingJobStatus": "Completed",
+    "SecondaryStatus": "Completed",
+    "HyperParameters": {
+        "_tuning_objective_metric": "validation:rmse",
+        "alpha": "1.4948555405623223",
+        "colsample_bytree": "0.7226847253122732",
+        "eta": "0.2554520526499571",
+        "eval_metric": "rmse",
+        "gamma": "0.00012643928651263258",
+        "max_depth": "8",
+        "min_child_weight": "0.01792055829003711",
+        "num_round": "1160",
+        "objective": "reg:tweedie",
+        "reg_lambda": "5.179328979063623e-05",
+        "subsample": "0.9884119720776892",
+        "tweedie_variance_power": "1.6"
+    },
+    "AlgorithmSpecification": {
+        "TrainingImage": "685385470294.dkr.ecr.eu-west-1.amazonaws.com/xgboost:latest",
+        "TrainingInputMode": "File",
+        "MetricDefinitions": [
+            {
+                "Name": "train:mae",
+                "Regex": ".*\\[[0-9]+\\].*#011train-mae:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "validation:auc",
+                "Regex": ".*\\[[0-9]+\\].*#011validation-auc:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "train:merror",
+                "Regex": ".*\\[[0-9]+\\].*#011train-merror:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "train:auc",
+                "Regex": ".*\\[[0-9]+\\].*#011train-auc:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "validation:mae",
+                "Regex": ".*\\[[0-9]+\\].*#011validation-mae:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "validation:error",
+                "Regex": ".*\\[[0-9]+\\].*#011validation-error:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "validation:merror",
+                "Regex": ".*\\[[0-9]+\\].*#011validation-merror:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "validation:logloss",
+                "Regex": ".*\\[[0-9]+\\].*#011validation-logloss:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "train:rmse",
+                "Regex": ".*\\[[0-9]+\\].*#011train-rmse:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "train:logloss",
+                "Regex": ".*\\[[0-9]+\\].*#011train-logloss:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "train:mlogloss",
+                "Regex": ".*\\[[0-9]+\\].*#011train-mlogloss:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "validation:rmse",
+                "Regex": ".*\\[[0-9]+\\].*#011validation-rmse:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "validation:ndcg",
+                "Regex": ".*\\[[0-9]+\\].*#011validation-ndcg:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "train:error",
+                "Regex": ".*\\[[0-9]+\\].*#011train-error:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "validation:mlogloss",
+                "Regex": ".*\\[[0-9]+\\].*#011validation-mlogloss:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "train:ndcg",
+                "Regex": ".*\\[[0-9]+\\].*#011train-ndcg:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "train:map",
+                "Regex": ".*\\[[0-9]+\\].*#011train-map:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "validation:map",
+                "Regex": ".*\\[[0-9]+\\].*#011validation-map:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            },
+            {
+                "Name": "ObjectiveMetric",
+                "Regex": ".*\\[[0-9]+\\].*#011validation-rmse:([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?).*"
+            }
+        ],
+        "EnableSageMakerMetricsTimeSeries": false
+    },
+    "RoleArn": "arn:aws:iam::1234567890:role/mlops-studio-StateMachineRole-18MP6G52D6PCR",
+    "InputDataConfig": [
+        {
+            "ChannelName": "train",
+            "DataSource": {
+                "S3DataSource": {
+                    "S3DataType": "S3Prefix",
+                    "S3Uri": "s3://your-bucket-tmp/aws-mlops/main/8b7b072ad758c2c8a1514242210d82d7cef69f02/2021-07-06-11-42-30/train_data",
+                    "S3DataDistributionType": "FullyReplicated"
+                }
+            },
+            "ContentType": "text/csv",
+            "CompressionType": "None",
+            "RecordWrapperType": "None"
+        },
+        {
+            "ChannelName": "validation",
+            "DataSource": {
+                "S3DataSource": {
+                    "S3DataType": "S3Prefix",
+                    "S3Uri": "s3://your-bucket-tmp/aws-mlops/main/8b7b072ad758c2c8a1514242210d82d7cef69f02/2021-07-06-11-42-30/test_data",
+                    "S3DataDistributionType": "FullyReplicated"
+                }
+            },
+            "ContentType": "text/csv",
+            "CompressionType": "None",
+            "RecordWrapperType": "None"
+        }
+    ],
+    "OutputDataConfig": {
+        "KmsKeyId": "",
+        "S3OutputPath": "s3://your-bucket-tmp/aws-mlops/main/8b7b072ad758c2c8a1514242210d82d7cef69f02/2021-07-06-18-07-02/models"
+    },
+    "ResourceConfig": {
+        "InstanceType": "ml.m5.4xlarge",
+        "InstanceCount": 1,
+        "VolumeSizeInGB": 30
+    },
+    "StoppingCondition": {
+        "MaxRuntimeInSeconds": 86400
+    },
+    "CreationTime": 1625595151.275,
+    "TrainingStartTime": 1625595269.174,
+    "TrainingEndTime": 1625595321.243,
+    "LastModifiedTime": 1625595321.243,
+    "SecondaryStatusTransitions": [
+        {
+            "Status": "Starting",
+            "StartTime": 1625595151.275,
+            "EndTime": 1625595269.174,
+            "StatusMessage": "Preparing the instances for training"
+        },
+        {
+            "Status": "Downloading",
+            "StartTime": 1625595269.174,
+            "EndTime": 1625595293.825,
+            "StatusMessage": "Downloading input data"
+        },
+        {
+            "Status": "Training",
+            "StartTime": 1625595293.825,
+            "EndTime": 1625595314.114,
+            "StatusMessage": "Training image download completed. Training in progress."
+        },
+        {
+            "Status": "Uploading",
+            "StartTime": 1625595314.114,
+            "EndTime": 1625595321.243,
+            "StatusMessage": "Uploading generated training model"
+        },
+        {
+            "Status": "Completed",
+            "StartTime": 1625595321.243,
+            "EndTime": 1625595321.243,
+            "StatusMessage": "Training job completed"
+        }
+    ],
+    "FinalMetricDataList": [
+        {
+            "MetricName": "train:rmse",
+            "Value": 0.24008500576019287,
+            "Timestamp": 1625595309.0
+        },
+        {
+            "MetricName": "validation:rmse",
+            "Value": 0.5709350109100342,
+            "Timestamp": 1625595309.0
+        },
+        {
+            "MetricName": "ObjectiveMetric",
+            "Value": 0.5709350109100342,
+            "Timestamp": 1625595309.0
+        }
+    ],
+    "EnableNetworkIsolation": false,
+    "EnableInterContainerTrafficEncryption": false,
+    "EnableManagedSpotTraining": false,
+    "TrainingTimeInSeconds": 52,
+    "BillableTimeInSeconds": 52,
+    "ProfilingStatus": "Disabled"
+}

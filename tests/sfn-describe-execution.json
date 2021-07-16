@@ -1,0 +1,10 @@
+{
+    "executionArn": "arn:aws:states:eu-west-1:1234567890:execution:mlops-studio-modeling:mlops-studio-modeling-2021-07-07T16-39-09466312",
+    "stateMachineArn": "arn:aws:states:eu-west-1:1234567890:stateMachine:mlops-studio-modeling",
+    "name": "mlops-studio-modeling-2021-07-07T16-39-09466312",
+    "status": "FAILED",
+    "input": "{\"Parameter\": \"Initial\", \"ModelName\": \"mlopsstudiomodel20210707T114946\"}",
+    "inputDetails": {
+        "included": true
+    }
+}
