@@ -28,15 +28,15 @@ class MLOps():
     config = None
     ecr = None
     sfn = None
+    sts = None
     ds = None
-    role = None
     region = None
     def __init__(self, config):
         self.config = config
         self.ecr = boto3.client('ecr')
         self.sfn = boto3.client('stepfunctions')
+        self.sts = boto3.client('sts')
         self.ds = DataStorage()
-        self.role = sagemaker.get_execution_role()
         self.region = boto3.Session().region_name
 
     def get_state_machine_suffix(self, name):
@@ -58,7 +58,7 @@ class MLOps():
                 string of state machine ARN
         """
         # https://github.com/boto/boto3/issues/454
-        account_id = boto3.client('sts').get_caller_identity()['Account']
+        account_id = self.sts.get_caller_identity()['Account']
         suffix = self.get_state_machine_suffix(name)
         return f'arn:aws:states:{self.region}:{account_id}:stateMachine:{config.service}-{config.environment}-{suffix}'
     def create_unique_identificator(self, name, config):

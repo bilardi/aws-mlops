@@ -11,6 +11,8 @@ preinference_input = {}
 # input for modeling
 # https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateHyperParameterTuningJob.html
 tuning_input = {}
+# https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateTrainingJob.html
+training_input = {}
 
 # input for inference
 # https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateModel.html

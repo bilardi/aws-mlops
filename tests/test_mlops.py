@@ -1,8 +1,6 @@
 import unittest
 import os
 import json
-import filecmp
-
 import tests.config as config
 import tests.definitions as definitions
 from aws_mlops.mlops import MLOps
@@ -30,6 +28,10 @@ class SfnClient():
         self.dsm_details = stateMachineArn
         return self.dsm
 
+class StsClient():
+    def get_caller_identity(self):
+        return {'Account': '1234567890'}
+
 class TestMLOps(unittest.TestCase, MLOps):
     mo = None
 
@@ -37,6 +39,7 @@ class TestMLOps(unittest.TestCase, MLOps):
         self.mo = MLOps(config)
         self.mo.ecr = EcrClient()
         self.mo.sfn = SfnClient()
+        self.mo.sts = StsClient()
         self.mo.role = 'arn'
         self.tmp = os.path.dirname(os.path.realpath(__file__))
         unittest.TestCase.__init__(self, *args, **kwargs)
@@ -69,7 +72,7 @@ class TestMLOps(unittest.TestCase, MLOps):
         self.assertRegex(name, r'^[0-9A-Za-z-]+$')
         self.assertEqual(response_input, input)
         obj = json.loads(input)
-        self.assertEqual(len(list(obj.keys())), 61)
+        self.assertEqual(len(list(obj.keys())), 64)
         self.assertIn('arn:aws:states:', stateMachineArn)
         self.assertIn(':stateMachine:mlops-studio-processing', stateMachineArn)
 
@@ -80,7 +83,7 @@ class TestMLOps(unittest.TestCase, MLOps):
         self.assertRegex(name, r'^[0-9A-Za-z-]+$')
         self.assertEqual(response_input, input)
         obj = json.loads(input)
-        self.assertEqual(len(list(obj.keys())), 61)
+        self.assertEqual(len(list(obj.keys())), 64)
         self.assertIn('arn:aws:states:', stateMachineArn)
         self.assertIn(':stateMachine:mlops-studio-modeling', stateMachineArn)
 

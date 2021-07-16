@@ -2,11 +2,12 @@ import os.path
 import git
 from datetime import datetime
 
-from boto3 import setup_default_session
+import boto3
+import sagemaker
 if os.path.isdir('/Users') or os.path.isdir('/home/jovyan/'):
-    setup_default_session(profile_name='your-account', region_name='eu-west-1')
+    boto3.setup_default_session(profile_name='your-account', region_name='eu-west-1')
 else:
-    setup_default_session()
+    boto3.setup_default_session()
 
 def get_git_details():
     repo = git.Repo(search_parent_directories=True)
@@ -18,7 +19,7 @@ def slash_to_dash(string):
     return string.replace('/','-')
 def dictionary_from_module(module):
     context = {}
-    black_list = ['os', 'git', 'datetime', 'definitions_config', 'get_git_details', 'create_ts', 'slash_to_dash', 'dictionary_from_module', 'setup_default_session']
+    black_list = ['os', 'git', 'datetime', 'boto3', 'sagemaker', 'get_git_details', 'create_ts', 'slash_to_dash', 'dictionary_from_module']
     for setting in dir(module):
         # you can write your filter here
         if not setting.startswith('_') and not setting in (black_list):
@@ -32,7 +33,8 @@ ecr_repository_name = f'{service}-{environment}-processing'
 [ branch, commit ] = get_git_details()
 ts = create_ts()
 
-source_bucket='your-bucket'
+#source_bucket='your-bucket'
+source_bucket = sagemaker.Session().default_bucket()
 model_bucket=source_bucket # it is different, if you want to define an expiration date for old models
 destination_bucket=source_bucket # it is different, if you want to define a trigger for your predictions / reports
 key=f'{service}/{branch}/{commit}/{ts}' # for testing
@@ -42,7 +44,6 @@ if os.environ.get('KEY'):
 dash_key=slash_to_dash(key)
 test_key=key # it is different, if you want to try modeling without to run again pretraining
 
-# path of your data
 # path of your data
 raw_data_filename='winequality-red.csv'
 raw_data_key=f'{service}/{branch}/raw_data' # for testing
