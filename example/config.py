@@ -108,6 +108,7 @@ validation_path=f's3://{source_bucket}/{validation_data_key}'
 validation_s3_url=f'{validation_path}/{validation_filename}'
 
 models_path=f's3://{model_bucket}/{key}/models'
+models_ssm=f'/{service}/{branch}/model-input-id'
 
 #score_filename='.csv.out'
 score_path=f's3://{source_bucket}/{key}/prediction'

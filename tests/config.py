@@ -44,6 +44,8 @@ if os.environ.get('KEY'):
 dash_key=slash_to_dash(key)
 test_key=key # it is different, if you want to try modeling without to run again pretraining
 
+#model_input_id='sample'
+
 # path of your data
 raw_data_filename='winequality-red.csv'
 raw_data_key=f'{service}/{branch}/raw_data' # for testing
@@ -78,6 +80,7 @@ validation_path=f's3://{source_bucket}/{validation_data_key}'
 validation_s3_url=f'{validation_path}/{validation_filename}'
 
 models_path=f's3://{model_bucket}/{key}/models'
+models_ssm=f'/{service}/{branch}/model-input-id'
 
 #score_filename='.csv.out'
 score_path=f's3://{source_bucket}/{key}/prediction'

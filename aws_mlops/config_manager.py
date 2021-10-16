@@ -12,6 +12,7 @@ You can load it on a lambda and the handler is:
 """
 import boto3
 import json
+import os.path
 from botocore.exceptions import ClientError
 
 class ConfigManager():
@@ -151,6 +152,21 @@ class ConfigManager():
         # and remove files in config.key/models
         #self.remove_config_by_s3(bucket, key)
 
+    def update_model_input_id(self, config):
+        """
+        updates model input id from ssm
+            Arguments:
+                config (dict): dict of configuration
+            Returns:
+                dict of configuration
+        """
+        # the step function is named prediction, so the model_input_id can't be the same of turner_input_id
+        print(config)
+        if config['model_input_id'] == config['tuner_input_id'] and 'models_ssm' in config:
+            model_input_id = self.get_config_by_ssm(config['models_ssm'])
+            config['model_input_id'] = model_input_id
+        return config
+
     def run(self, event):
         """
         manages the states inputs
@@ -162,6 +178,8 @@ class ConfigManager():
         [ parameter_name, bucket, key, config ] = self.get_details(event)
         config.update(event['last_output'])
         self.save_details(parameter_name, bucket, key, config)
+        if event['StateName'] == 'GoToPreInference':
+            config = self.update_model_input_id(config)
         if event['StateName'] == 'GoToEnd':
             self.clean(parameter_name, bucket, key, config)
         return config

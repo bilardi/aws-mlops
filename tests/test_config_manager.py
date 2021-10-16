@@ -118,5 +118,17 @@ class TestManageConfig(unittest.TestCase, ConfigManager):
         self.assertTrue('Model', result) # get-execution
         self.assertFalse('VersionId' in result) # get-s3
 
+        self.event['StateName'] = 'GoToPreInference'
+        self.cm.sfn.de['input'] = "{\"model_input_id\": \"samplekey\", \"tuner_input_id\": \"samplekey\", \"models_ssm\": \"/ssm/path/name\"}"
+
+        self.cm.s3.goe = True
+        result = self.cm.run(self.event)
+        self.assertEqual(result['model_input_id'], {'Parameter': 'Store'}) # get-ssm
+
+        self.cm.sfn.de['input'] = "{\"model_input_id\": \"sample\", \"tuner_input_id\": \"samplekey\"}"
+
+        result = self.cm.run(self.event)
+        self.assertEqual(result['model_input_id'], 'sample') # get-event
+
 if __name__ == '__main__':
     unittest.main()
