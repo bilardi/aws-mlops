@@ -72,7 +72,7 @@ class TestMLOps(unittest.TestCase, MLOps):
         self.assertRegex(name, r'^[0-9A-Za-z-]+$')
         self.assertEqual(response_input, input)
         obj = json.loads(input)
-        self.assertEqual(len(list(obj.keys())), 64)
+        self.assertEqual(len(list(obj.keys())), 65)
         self.assertIn('arn:aws:states:', stateMachineArn)
         self.assertIn(':stateMachine:mlops-studio-processing', stateMachineArn)
 
@@ -83,7 +83,7 @@ class TestMLOps(unittest.TestCase, MLOps):
         self.assertRegex(name, r'^[0-9A-Za-z-]+$')
         self.assertEqual(response_input, input)
         obj = json.loads(input)
-        self.assertEqual(len(list(obj.keys())), 64)
+        self.assertEqual(len(list(obj.keys())), 65)
         self.assertIn('arn:aws:states:', stateMachineArn)
         self.assertIn(':stateMachine:mlops-studio-modeling', stateMachineArn)
 

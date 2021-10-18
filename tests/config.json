@@ -3,6 +3,7 @@
         "Parameter": "from-event",
         "service": "mlops",
         "source_bucket": "your-bucket",
+        "execution_ssm": "/mlops/alessandra/f6ef02411a708b27bf665a0d293b46e6fea707b9/2021-10-18-10-24-38/execution-details",
         "container_input": {
             "container": {
                 "framework": "xgboost",

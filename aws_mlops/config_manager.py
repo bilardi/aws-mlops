@@ -124,7 +124,7 @@ class ConfigManager():
             config = self.get_config_by_sfn(event['ExecutionId'])
         return [ parameter_name, bucket, key, config ]
 
-    def save_details(self, parameter_name, bucket, key, config):
+    def save_details(self, parameter_name, bucket, key, config, event):
         """
         saves position and configuration
             Arguments:
@@ -132,8 +132,10 @@ class ConfigManager():
                 bucket (str): bucket name
                 key (str): path and filename where to save the dict of configuration
                 config (dict): dict of configuration
+                event (dict): dict of event
         """
         self.save_config_by_ssm(parameter_name, bucket)
+        self.save_config_by_ssm(config['execution_ssm'], json.dumps({"ExecutionId": event['ExecutionId'], "ExecutionName": event['ExecutionName']}))
         self.save_config_by_s3(bucket, key, config)
 
     def clean(self, parameter_name, bucket, key, config):
@@ -161,7 +163,6 @@ class ConfigManager():
                 dict of configuration
         """
         # the step function is named prediction, so the model_input_id can't be the same of turner_input_id
-        print(config)
         if config['model_input_id'] == config['tuner_input_id'] and 'models_ssm' in config:
             model_input_id = self.get_config_by_ssm(config['models_ssm'])
             config['model_input_id'] = model_input_id
@@ -177,7 +178,7 @@ class ConfigManager():
         """
         [ parameter_name, bucket, key, config ] = self.get_details(event)
         config.update(event['last_output'])
-        self.save_details(parameter_name, bucket, key, config)
+        self.save_details(parameter_name, bucket, key, config, event)
         if event['StateName'] == 'GoToPreInference':
             config = self.update_model_input_id(config)
         if event['StateName'] == 'GoToEnd':

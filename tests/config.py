@@ -43,6 +43,7 @@ if os.environ.get('KEY'):
     key = os.environ.get('KEY')
 dash_key=slash_to_dash(key)
 test_key=key # it is different, if you want to try modeling without to run again pretraining
+execution_ssm=f'/{key}/execution-details'
 
 #model_input_id='sample'
 
