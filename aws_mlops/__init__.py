@@ -18,5 +18,5 @@ the other classes are splitted for each single step of model cycle.
 # license MIT
 # support https://github.com/bilardi/aws-mlops/issues
 """
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 __author__ = 'Alessandra Bilardi'
