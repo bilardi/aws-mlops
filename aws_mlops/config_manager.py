@@ -115,7 +115,7 @@ class ConfigManager():
         """
         key = event['ExecutionName'].replace('-','/',3)
         parameter_name = '/' + key
-        if 'source_bucket' in event['last_output']:
+        if 'last_output' in event and 'source_bucket' in event['last_output']:
             bucket = event['last_output']['source_bucket']
         else:
             bucket = self.get_config_by_ssm(parameter_name)
@@ -177,7 +177,8 @@ class ConfigManager():
                 dictionary with statusCode and body
         """
         [ parameter_name, bucket, key, config ] = self.get_details(event)
-        config.update(event['last_output'])
+        if 'last_output' in event:
+            config.update(event['last_output'])
         self.save_details(parameter_name, bucket, key, config, event)
         if event['StateName'] == 'GoToPreInference':
             config = self.update_model_input_id(config)

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2021-10-27
+
+### Added
+- last_output controls for no lambda running
+
 ## [0.2.2] - 2021-10-18
 
 ### Added
@@ -17,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - infrastructure and example
 - script for processing, testing and deploying
 - method for managing model_input_id by ssm
+
 ## [0.2.0] - 2021-07-16
 
 ### Changed
@@ -52,7 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the init files of package and tests
 - the documentation by sphinx
 
-[Unreleased]: https://github.com/bilardi/aws-saving/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/bilardi/aws-saving/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/bilardi/aws-saving/releases/tag/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/bilardi/aws-saving/releases/tag/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/bilardi/aws-saving/releases/tag/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/bilardi/aws-saving/releases/tag/v0.1.0...v0.2.0
