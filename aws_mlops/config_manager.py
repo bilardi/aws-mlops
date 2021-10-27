@@ -179,11 +179,12 @@ class ConfigManager():
         [ parameter_name, bucket, key, config ] = self.get_details(event)
         if 'last_output' in event:
             config.update(event['last_output'])
-        self.save_details(parameter_name, bucket, key, config, event)
-        if event['StateName'] == 'GoToPreInference':
-            config = self.update_model_input_id(config)
-        if event['StateName'] == 'GoToEnd':
-            self.clean(parameter_name, bucket, key, config)
+            self.save_details(parameter_name, bucket, key, config, event)
+        if 'StateName' in event:
+            if event['StateName'] == 'GoToPreInference':
+                config = self.update_model_input_id(config)
+            if event['StateName'] == 'GoToEnd':
+                self.clean(parameter_name, bucket, key, config)
         return config
 
 def main(event, context = None):

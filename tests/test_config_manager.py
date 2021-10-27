@@ -125,9 +125,15 @@ class TestManageConfig(unittest.TestCase, ConfigManager):
         result = self.cm.run(self.event)
         self.assertEqual(result['model_input_id'], {'Parameter': 'Store'}) # get-ssm
 
+        result = self.cm.run({'ExecutionId': 'test-from-processing-id', 'ExecutionName': 'test-from-processing-name'})
+        self.assertEqual(result['model_input_id'], 'samplekey') # get-description
+
         self.cm.sfn.de['input'] = "{\"model_input_id\": \"sample\", \"tuner_input_id\": \"samplekey\"}"
 
         result = self.cm.run(self.event)
+        self.assertEqual(result['model_input_id'], 'sample') # get-event
+
+        result = self.cm.run({'ExecutionId': 'test-from-processing-id', 'ExecutionName': 'test-from-processing-name'})
         self.assertEqual(result['model_input_id'], 'sample') # get-event
 
 if __name__ == '__main__':
