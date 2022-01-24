@@ -1,1 +1,5 @@
+aws-mlops
 boto3
+GitPython
+s3fs<=0.4
+sagemaker

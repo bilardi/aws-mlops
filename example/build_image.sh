@@ -23,7 +23,11 @@ fi
 
 account_id=$(aws sts get-caller-identity | grep Account | awk '{print $2}' | sed 's/[",]//g')
 repository="$account_id.dkr.ecr.$AWS_REGION.amazonaws.com/mlops-$STAGE-processing"
-commit=$(git rev-parse HEAD | head -c 8)
+if [ -d '/codebuild' ]; then
+    commit=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8) # for CD
+else
+    commit=$(git rev-parse HEAD | head -c 8) # for testing
+fi
 processing_repository_uri="$repository:$commit"
 echo "ECR repo: $processing_repository_uri"
 
@@ -31,8 +35,14 @@ echo "ECR repo: $processing_repository_uri"
 path=$(dirname $0)
 cd $path
 
+# for loading - https://www.docker.com/increase-rate-limit
+if [ $action == 'push' ]; then
+    echo "login to docker hub"
+    echo "${IMAGE_SECRET_ID_PASSWORD}" | docker login --username $(echo "${IMAGE_SECRET_ID_USERNAME}") --password-stdin
+fi
+
 echo "docker build"
-docker build -t $processing_repository_uri .
+docker build -t $processing_repository_uri -t $repository:latest .
 
 if [ $action == 'push' ]; then
     echo "get login"
@@ -44,7 +54,7 @@ if [ $action == 'push' ]; then
         aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $repository
     fi
     echo "docker push"
-    docker push $processing_repository_uri
+    docker image push --all-tags $repository
 fi
 
 cd -

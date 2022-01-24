@@ -1,5 +1,7 @@
 import os
 import git
+from pathlib import Path
+import json
 from datetime import datetime
 
 import boto3
@@ -15,29 +17,55 @@ if os.path.isdir('/Users') or os.path.isdir('/home/jovyan/'):
 else:
     boto3.setup_default_session(region_name=region_name)
 
-def get_git_details():
-    repo = git.Repo(search_parent_directories=True)
-    return [ repo.active_branch.name, repo.head.object.hexsha ]
+def get_git_details(main_branch):
+    try:
+        repo = git.Repo(search_parent_directories=True)
+        return [ repo.active_branch.name, repo.head.object.hexsha ]
+    except:
+        return [ main_branch, 'hash_fake' ]
+
 def create_ts():
     now = datetime.now()
     return now.strftime('%Y-%m-%d-%H-%M-%S')
 def slash_to_dash(string):
     return string.replace('/','-')
+def point_to_dash(string):
+    return string.replace('.','-')
 def dictionary_from_module(module):
     context = {}
-    black_list = ['os', 'git', 'datetime', 'boto3', 'sagemaker', 'get_git_details', 'create_ts', 'slash_to_dash', 'dictionary_from_module']
+    black_list = ['os', 'git', 'Path', 'json', 'datetime', 'boto3', 'sagemaker', 'get_git_details', 'create_ts', 'slash_to_dash', 'point_to_dash', 'dictionary_from_module', 'load_file', 'load_queries']
     for setting in dir(module):
         # you can write your filter here
         if not setting.startswith('_') and not setting in (black_list):
             context[setting] = getattr(module, setting)
     return context
+def load_file(filename):
+    response = None
+    if Path(filename).is_file():
+        with open(filename) as json_file:
+            response = json.load(json_file)
+    return response
+def load_queries(files):
+    inputs = []
+    for file in files:
+        input = None
+        if Path(file).is_file():
+            # for make input
+            input = load_file(file)
+        else:
+            # for jupyter
+            file = '../' + file
+            input = load_file(file)
+        inputs.append(input)
+    return inputs
 
 # common input
 service = 'mlops' # name of your service
-environment = 'studio' # stanging / production
+environment = 'studio' # for CD: stanging / production
+main_branch = 'master'
 if os.environ.get('STAGE'):
     environment = os.environ.get('STAGE')
-[ branch, commit ] = get_git_details()
+[ branch, commit ] = get_git_details(main_branch)
 repo_url = 'https://github.com/bilardi/aws-mlops.git'
 repo_name = 'aws-mlops'
 #branch = 'alessandra'
@@ -55,34 +83,46 @@ execution_name = ''
 if os.environ.get('ExecutionName'):
     execution_name = os.environ.get('ExecutionName')
 
-#source_bucket = 'your-account'
-source_bucket = sagemaker.Session().default_bucket()
+source_bucket = sagemaker.Session().default_bucket() # for testing
+if branch == main_branch and environment == 'production':
+    source_bucket = 'your-bucket' # for CD
 model_bucket = source_bucket # it is different, if you want to define an expiration date for old models
 destination_bucket = source_bucket # it is different, if you want to define a trigger for your predictions / reports
-key = f'{service}/{branch}/{commit}/{ts}' # for testing
-#key=f'{service}/{branch}/{environment}/{commit}/{ts}' for CD
+key = f'{repo_name}/{branch}/{commit}/{ts}' # for testing
+if branch == main_branch:
+    key=f'{repo_name}/{branch}/{environment}/{commit}/{ts}' # for CD
 if os.environ.get('KEY'):
     key = os.environ.get('KEY')
-dash_key = slash_to_dash(key)
-test_key = key # it is different, if you want to try modeling without to run again pretraining
 
-# you can define statically some parameters
-#test_key='mlops/alessandra/bc7ed76e07967efaf3993b437a2d65b3ce28e19c/2021-07-14-09-23-20'
+# you can define statically some parameters here
+#key='mlops/alessandra/4c25c805c46c2d2865c2eab995fa968a61c0eaf6/2021-10-18-10-24-38'
 #BestTrainingJob = {'TrainingJobName': 'mlopsstudio20210714T09235703702-008-5e5c0ba9'}
 #model_input_id='mlopsstudio20210714t09235703702'
 #role_arn=''
 #processing_image_uri=''
 #container_image_uri=''
 
+# key-dependent variables
+dash_key = slash_to_dash(key)
+test_key = key # it is different, if you want to try modeling without to run again pretraining
+execution_ssm=f'/{key}/execution-details'
+
+# you can define statically some parameters here
+#test_key='mlops/alessandra/bc7ed76e07967efaf3993b437a2d65b3ce28e19c/2021-07-14-09-23-20'
+
 # path of your data
 raw_data_filename='winequality-red.csv'
-raw_data_key=f'{service}/{branch}/raw_data' # for testing
-#raw_data_key=f'{key}/raw_data' # for production
+raw_data_key=f'{repo_name}/{branch}/raw_data' # for testing
+if branch == main_branch:
+    raw_data_filename='data.csv'
+    raw_data_key=f'{key}/raw_data' # for CD
 raw_data_s3_url=f's3://{source_bucket}/{raw_data_key}/{raw_data_filename}'
 
 new_data_filename='winequality-white.csv'
-new_data_key=f'{service}/{branch}/new_data' # for testing
-#new_data_key=f'{key}/new_data' # for production
+new_data_key=f'{repo_name}/{branch}/new_data' # for testing
+if branch == main_branch:
+    new_data_filename='data.csv'
+    new_data_key=f'{key}/new_data' # for CD
 new_data_path=f's3://{source_bucket}/{new_data_key}'
 new_data_s3_url=f'{new_data_path}/{new_data_filename}'
 
@@ -108,7 +148,7 @@ validation_path=f's3://{source_bucket}/{validation_data_key}'
 validation_s3_url=f'{validation_path}/{validation_filename}'
 
 models_path=f's3://{model_bucket}/{key}/models'
-models_ssm=f'/{service}/{branch}/model-input-id'
+models_ssm=f'/{repo_name}/{branch}/model-input-id'
 
 #score_filename='.csv.out'
 score_path=f's3://{source_bucket}/{key}/prediction'
@@ -118,7 +158,7 @@ prediction_filename='prediction.csv'
 # prediction_path=score_path
 prediction_path=f's3://{destination_bucket}/{key}/prediction'
 report_filename='report.csv'
-report_path=prediction_path
+report_path=f's3://{destination_bucket}/{key}/report'
 
 # input for images and containers
 container_input = {

@@ -1,7 +1,7 @@
 aws-mlops
 boto3
 GitPython
-s3fs==2021.6.0
+s3fs<=0.4
 sagemaker
 sklearn
 pandas

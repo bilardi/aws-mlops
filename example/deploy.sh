@@ -30,12 +30,16 @@ path=$(dirname $0)
 cd $path
 
 echo "create step functions definitions"
+pip install --upgrade -r requirements.txt
 python3 create_definitions.py
 cp $STAGE.pretraining.definition.json ../default.processing.definition.json
 cp $STAGE.modeling.definition.json ../default.modeling.definition.json
 cp $STAGE.prediction.definition.json ../default.prediction.definition.json
 cp $STAGE.mlops.definition.json ../default.mlops.definition.json
 cd -
+
+echo "remove building files"
+make clean
 
 echo "deploy infrastructure"
 SLS_DEBUG=* sls $action --stage $STAGE

@@ -1,7 +1,10 @@
 import config as config
-
 service = config.service
 environment = config.environment
+
+import os
+if os.environ.get('STAGE'):
+    environment = os.environ.get('STAGE')
 
 # input for preprocessing
 # https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateProcessingJob.html
@@ -119,6 +122,23 @@ model_input = {
         'ModelDataUrl.$': "$['S3ModelArtifacts']"
     }
 }
+# # https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateEndpointConfig.html
+# endpoint_config_input = {
+#     'EndpointConfigName.$': '$.endpoint_config_name',
+#     'ProductionVariants': [
+#         {
+#             'ModelName.$': '$.model_input_id',
+#             'VariantName.$': '$.model_variant_input_id'
+#         }
+#     ]
+# }
+# # https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpoint.html
+# # https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_UpdateEndpoint.html
+# endpoint_input = {
+#     'EndpointConfigName.$': '$.endpoint_config_name',
+#     'EndpointName.$': '$.endpoint_name'
+# }
+## choice: if endpoint already exists, updateEndpoint else createEndpoint
 # https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_CreateTransformJob.html
 testing_transformer_input = {
     'TransformJobName.$': '$.testing_transformer_input_id',
