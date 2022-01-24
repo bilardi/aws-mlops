@@ -53,7 +53,7 @@ If you did never push an image on your repository, run the commands of **Deploy 
     cd aws-mlops/
     export AWS_PROFILE=your-account
     export STAGE=development
-    bash example/test_docker.sh
+    bash example/test_docker.sh # and with bash example/test.sh for all
 
 Deploy on AWS
 #############

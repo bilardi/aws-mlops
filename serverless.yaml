@@ -2,10 +2,12 @@ service: mlops
 frameworkVersion: ^2.46.0
 disabledDeprecations:
   - CLI_OPTIONS_SCHEMA
+configValidationMode: off
+variablesResolutionMode: 20210326
 provider:
   name: aws
-  stage: ${opt:stage, 'development'}
-  runtime: python3.6
+  stage: ${opt:stage, 'studio'}
+  runtime: python3.8
   region: ${opt:region, 'eu-west-1'}
   memorySize: 512
   timeout: 300
@@ -30,14 +32,19 @@ provider:
             - ssm:List*
             - ssm:Put*
             - ssm:Delete*
-          Resource: "arn:aws:ssm:${self:provider.region}:#{AWS::AccountId}:parameter/${self:service}/${self:provider.stage}/*"
+          Resource:
+            - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:service}/${self:provider.stage}/*
+            - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:custom.repositoryName}/*
         - Effect: Allow
           Action:
             - s3:PutObject
             - s3:GetObject
+            - s3:CreateMultipartUpload
           Resource:
-            - arn:aws:s3:::sagemaker-${self:provider.region}-#{AWS::AccountId}
-            - arn:aws:s3:::sagemaker-${self:provider.region}-#{AWS::AccountId}/*
+            - arn:aws:s3:::sagemaker-${self:provider.region}-${AWS::AccountId}
+            - arn:aws:s3:::sagemaker-${self:provider.region}-${AWS::AccountId}/*
+            - arn:aws:s3:::${self:custom.bucketName.${self:provider.stage}, self:custom.bucketName.default}
+            - arn:aws:s3:::${self:custom.bucketName.${self:provider.stage}, self:custom.bucketName.default}/*
         - Effect: Allow
           Action:
             - lambda:Invoke*
@@ -51,23 +58,31 @@ provider:
             - states:List*
             - states:Describe*
             - states:StartExecution
-          Resource: "arn:aws:states:${self:provider.region}:#{AWS::AccountId}:*:*"
+          Resource:
+            - Fn::Sub: "arn:aws:states:${self:provider.region}:${AWS::AccountId}:*:*"
   environment:
     stage: ${self:provider.stage}
 custom:
   pythonRequirements:
-    pythonBin: /usr/bin/python3
+    #dockerizePip: non-linux
+    pythonBin: ${self:custom.pythonBin.${self:provider.stage}, self:custom.pythonBin.default}
   SNStopicName: ""
 
   stage:
     production: production
     default: default
+  pythonBin:
+    production: /root/.pyenv/shims/python # for CD
+    staging: /root/.pyenv/shims/python # for CD
+    default: /usr/bin/python3 # for testing
   functionName:
     production: ${self:service}
     default: ${self:service}-${self:provider.stage}
   bucketName:
-    production: your-bucket-production
-    default: your-bucket-tmp
+    production: your-bucket-production # for CD
+    staging: your-bucket-staging # for CD
+    default: your-bucket-tmp # for testing
+  repositoryName: aws-mlops
   savingTags:
     saving:
       production: Disabled
@@ -89,13 +104,13 @@ package:
     - '!.ipython/**'
     - '!.cache/**'
     - '!.aws/**'
+    - '!.env/**'
     - '!.jupyter/**'
     - '!.git/**'
 
 plugins:
   - serverless-python-requirements
   - serverless-step-functions
-  - serverless-pseudo-parameters
 
 functions:
   bestJob:
@@ -131,6 +146,12 @@ stepFunctions:
       role: 
         Fn::GetAtt: ["StateMachineRole", "Arn"]
       definition: ${file(./${self:custom.stage.${self:provider.stage}, self:custom.stage.default}.mlops.definition.json)}
+    # Endpoint:
+    #   dependsOn: StateMachineRole
+    #   name: ${self:custom.functionName.${self:provider.stage}, self:custom.functionName.default}-endpoint
+    #   role: 
+    #     Fn::GetAtt: ["StateMachineRole", "Arn"]
+    #   definition: ${file(./${self:custom.stage.${self:provider.stage}, self:custom.stage.default}.endpoint.definition.json)}
 
 resources:
   Description: ${self:service} - ${self:provider.stage}
@@ -178,22 +199,42 @@ resources:
                 - logs:CreateLogStream
                 - logs:PutLogEvents
                 - logs:CreateLogGroup
-                - logs:DescribeLogStreams             
+                - logs:DescribeLogStreams
               Resource: "*"
             - Effect: Allow
               Action:
                 - s3:PutObject
+                - s3:CreateMultipartUpload
               Resource:
-                - arn:aws:s3:::sagemaker-${self:provider.region}-#{AWS::AccountId}
-                - arn:aws:s3:::sagemaker-${self:provider.region}-#{AWS::AccountId}/*
+                - Fn::Sub: arn:aws:s3:::sagemaker-${self:provider.region}-${AWS::AccountId}
+                - Fn::Sub: arn:aws:s3:::sagemaker-${self:provider.region}-${AWS::AccountId}/*
+                - arn:aws:s3:::${self:custom.bucketName.${self:provider.stage}, self:custom.bucketName.default}
+                - arn:aws:s3:::${self:custom.bucketName.${self:provider.stage}, self:custom.bucketName.default}/*
+            - Effect: Allow
+              Action:
+                - ssm:Describe*
+                - ssm:Get*
+                - ssm:List*
+                - ssm:Put*
+                - ssm:Delete*
+              Resource:
+                - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:service}/${self:provider.stage}/*
+                - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:custom.repositoryName}/*
+            # - Effect: Allow # for SSM
+            #   Action:
+            #     - ssm:Describe*
+            #     - ssm:Get*
+            #     - ssm:List*
+            #   Resource:
+            #     - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/git/username
+            #     - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/git/token
     Repository:
       Type: AWS::ECR::Repository
       Properties:
-        ImageTagMutability: IMMUTABLE
-        # LifecyclePolicy: 
-        #   LifecyclePolicy
         RepositoryName: ${self:custom.functionName.${self:provider.stage}, self:custom.functionName.default}-processing
         RepositoryPolicyText: ${file(./${self:custom.stage.${self:provider.stage}, self:custom.stage.default}.repository.policy.json)}
+        LifecyclePolicy:
+          LifecyclePolicyText: ${file(load-json-as-string.js):lifeCyclePolicy}
         Tags:
           - Key: Application
             Value: ${self:service}
