@@ -2,7 +2,7 @@
     "Parameter": {
         "Name": "/mlops/studio/modeling/2021-07-07T16-39-09466312",
         "Type": "String",
-        "Value": "{\"Parameter\":\"Store\"}",
+        "Value": "{\"bucket\":\"your-bucket\", \"key\":\"your/key\"}",
         "Version": 1
     }
 }

@@ -123,7 +123,7 @@ class TestManageConfig(unittest.TestCase, ConfigManager):
 
         self.cm.s3.goe = True
         result = self.cm.run(self.event)
-        self.assertEqual(result['model_input_id'], {'Parameter': 'Store'}) # get-ssm
+        self.assertEqual(result['model_input_id'], {'bucket': 'your-bucket', 'key': 'your/key'}) # get-ssm
 
         result = self.cm.run({'ExecutionId': 'test-from-processing-id', 'ExecutionName': 'test-from-processing-name'})
         self.assertEqual(result['model_input_id'], 'samplekey') # get-description

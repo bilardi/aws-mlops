@@ -106,23 +106,35 @@ class ConfigManager():
         return json.loads(execution_details['input'])
 
     def get_details(self, event):
-        """
-        gets configuration
-            Arguments:
-                event (dict): with ExecutionName parameter [and last_output with other all parameters]
-            Returns:
-                list of parameter_name, bucket, key and dict of configuration
-        """
-        key = event['ExecutionName'].replace('-','/',3)
-        parameter_name = '/' + key
-        if 'last_output' in event and 'source_bucket' in event['last_output']:
-            bucket = event['last_output']['source_bucket']
-        else:
-            bucket = self.get_config_by_ssm(parameter_name)
-        config = self.get_config_by_s3(bucket, key)
-        if not config:
-            config = self.get_config_by_sfn(event['ExecutionId'])
-        return [ parameter_name, bucket, key, config ]
+            """
+            gets configuration
+                Arguments:
+                    event (dict): with ExecutionName parameter [and last_output with other all parameters]
+                Returns:
+                    list of parameter_name, bucket, key and dict of configuration
+            """
+            datetime = event['ExecutionName'].replace('-','/',3)
+            parameter_name = '/' + datetime
+            bucket = key = None
+            if 'last_output' in event and 'source_bucket' in event['last_output']:
+                bucket = event['last_output']['source_bucket']
+            if 'last_output' in event and 'key' in event['last_output']:
+                key = event['last_output']['key']
+            if bucket is None or key is None:
+                value = self.get_config_by_ssm(parameter_name)
+                bucket = value['bucket']
+                key = value['key']
+            config = self.get_config_by_s3(bucket, f'{key}/config.json')
+            if not config:
+                print('get config by sfn')
+                config = self.get_config_by_sfn(event['ExecutionId'])
+            if not bucket:
+                print('get bucket by sfn')
+                bucket = config['source_bucket']
+            if not key:
+                print('get key by sfn')
+                key = config['key']
+            return [ parameter_name, bucket, key, config ]
 
     def save_details(self, parameter_name, bucket, key, config, event):
         """
@@ -134,9 +146,9 @@ class ConfigManager():
                 config (dict): dict of configuration
                 event (dict): dict of event
         """
-        self.save_config_by_ssm(parameter_name, bucket)
+        self.save_config_by_ssm(parameter_name, {"bucket":bucket, "key":key})
         self.save_config_by_ssm(config['execution_ssm'], json.dumps({"ExecutionId": event['ExecutionId'], "ExecutionName": event['ExecutionName']}))
-        self.save_config_by_s3(bucket, key, config)
+        self.save_config_by_s3(bucket, f'{key}/config.json', config)
 
     def clean(self, parameter_name, bucket, key, config):
         """
@@ -183,6 +195,7 @@ class ConfigManager():
         if 'StateName' in event:
             if event['StateName'] == 'GoToPreInference':
                 config = self.update_model_input_id(config)
+                self.save_details(parameter_name, bucket, key, config, event)
             if event['StateName'] == 'GoToEnd':
                 self.clean(parameter_name, bucket, key, config)
         return config
