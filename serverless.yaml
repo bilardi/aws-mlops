@@ -33,16 +33,15 @@ provider:
             - ssm:Put*
             - ssm:Delete*
           Resource:
-            - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:service}/${self:provider.stage}/*
-            - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:custom.repositoryName}/*
+            - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:service}/*
+            # - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:custom.repositoryName}/*
         - Effect: Allow
           Action:
             - s3:PutObject
-            - s3:GetObject
             - s3:CreateMultipartUpload
           Resource:
-            - arn:aws:s3:::sagemaker-${self:provider.region}-${AWS::AccountId}
-            - arn:aws:s3:::sagemaker-${self:provider.region}-${AWS::AccountId}/*
+            - Fn::Sub: arn:aws:s3:::sagemaker-${self:provider.region}-${AWS::AccountId}
+            - Fn::Sub: arn:aws:s3:::sagemaker-${self:provider.region}-${AWS::AccountId}/*
             - arn:aws:s3:::${self:custom.bucketName.${self:provider.stage}, self:custom.bucketName.default}
             - arn:aws:s3:::${self:custom.bucketName.${self:provider.stage}, self:custom.bucketName.default}/*
         - Effect: Allow
@@ -218,8 +217,8 @@ resources:
                 - ssm:Put*
                 - ssm:Delete*
               Resource:
-                - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:service}/${self:provider.stage}/*
-                - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:custom.repositoryName}/*
+                - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:service}/*
+                # - Fn::Sub: arn:aws:ssm:${self:provider.region}:${AWS::AccountId}:parameter/${self:custom.repositoryName}/*
             # - Effect: Allow # for SSM
             #   Action:
             #     - ssm:Describe*

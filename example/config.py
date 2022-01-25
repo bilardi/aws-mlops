@@ -105,7 +105,8 @@ if os.environ.get('KEY'):
 # key-dependent variables
 dash_key = slash_to_dash(key)
 test_key = key # it is different, if you want to try modeling without to run again pretraining
-execution_ssm=f'/{key}/execution-details'
+execution_ssm=f'/{key.replace(repo_name, service)}/execution-details'
+#execution_ssm=f'/{key}/execution-details' # No access to reserved parameter name (with prefix aws-)
 
 # you can define statically some parameters here
 #test_key='mlops/alessandra/bc7ed76e07967efaf3993b437a2d65b3ce28e19c/2021-07-14-09-23-20'
@@ -148,7 +149,8 @@ validation_path=f's3://{source_bucket}/{validation_data_key}'
 validation_s3_url=f'{validation_path}/{validation_filename}'
 
 models_path=f's3://{model_bucket}/{key}/models'
-models_ssm=f'/{repo_name}/{branch}/model-input-id'
+models_ssm=f'/{service}/{repo_name}/{branch}/model-input-id'
+#models_ssm=f'/{repo_name}/{branch}/model-input-id' # No access to reserved parameter name (with prefix aws-)
 
 #score_filename='.csv.out'
 score_path=f's3://{source_bucket}/{key}/prediction'
