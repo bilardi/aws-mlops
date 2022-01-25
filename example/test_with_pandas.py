@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 from aws_mlops.data_storage import DataStorage
 from aws_mlops.config_manager import ConfigManager
@@ -7,6 +8,14 @@ class TestWithPandas():
     def run(self, config_name, config):
         # restore columns nams of test/data, [target] and identifier columns
         ds = DataStorage(config.source_bucket, config.testing_data_key)
+        # downloading configuration used by config_manager.run()
+        cm = ConfigManager()
+        # for sagemaker processing
+        config_downloaded = cm.get_config_by_s3(config.source_bucket, f'{config.key}/config.json')
+        if config_downloaded == {}:
+            # for local & codebuild testing
+            config_downloaded = config.dictionary_from_module(config)
+        print(config_downloaded)
         identifier = None
         df = None
         output_dataframes = []
@@ -27,6 +36,11 @@ class TestWithPandas():
                 'Mean squared error': [metrics.mean_squared_error(df[config.target], df[config.score])],
                 'Mean absolute error': [metrics.mean_absolute_error(df[config.target], df[config.score])]
             })
+            if 'model_input_id' in config_downloaded:
+                # if the model is better, then save the model identificator on ssm
+                cm.save_config_by_ssm(config.models_ssm, config_downloaded['model_input_id'])
+            else:
+                print('model_input_id not found')
         else:
             [columns_names, identifier] = ds.restore_test([config.identifier])
             # join datasets
