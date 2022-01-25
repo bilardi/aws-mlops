@@ -63,8 +63,10 @@ docker run --name testprocessing -e AWS_PROFILE=$AWS_PROFILE -v $HOME/.aws/crede
 cd -
 
 if [ "$processing" == "pretraining" ] || [ "$processing" == "preinference" ]; then
-    docker cp testprocessing:/opt/ml/processing/train/train.csv processing/train_data/
-    docker cp testprocessing:/opt/ml/processing/validation/validation.csv processing/validation_data/
+    if [ "$processing" == "pretraining" ]; then
+        docker cp testprocessing:/opt/ml/processing/train/train.csv processing/train_data/
+        docker cp testprocessing:/opt/ml/processing/validation/validation.csv processing/validation_data/
+    fi
     docker cp testprocessing:/opt/ml/processing/test/test.csv processing/test_data/
     aws s3 cp s3://sagemaker-$AWS_REGION-$account_id/$key/testing_data/ processing/testing_data/ --recursive
     echo processing/train_data/train.csv

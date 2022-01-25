@@ -36,4 +36,4 @@ AWS_PROFILE=$AWS_PROFILE AWS_REGION=$AWS_REGION bash test_docker.sh reporting
 # infrastructure validation
 cd ..
 echo Infrastructure validation
-STAGE=$STAGE AWS_REGION=$AWS_REGION bash deploy.sh test
+STAGE=$STAGE AWS_REGION=$AWS_REGION bash $path/deploy.sh test

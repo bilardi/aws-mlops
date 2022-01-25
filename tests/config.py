@@ -5,7 +5,13 @@ from datetime import datetime
 import boto3
 import sagemaker
 if os.path.isdir('/Users') or os.path.isdir('/home/jovyan/'):
-    boto3.setup_default_session(profile_name='your-account', region_name='eu-west-1')
+    region_name='eu-west-1'
+    if os.environ.get('AWS_REGION'):
+        region_name = os.environ.get('AWS_REGION')
+    profile_name='your-account'
+    if os.environ.get('AWS_PROFILE'):
+        profile_name = os.environ.get('AWS_PROFILE')
+    boto3.setup_default_session(profile_name=profile_name, region_name=region_name)
 else:
     boto3.setup_default_session()
 
