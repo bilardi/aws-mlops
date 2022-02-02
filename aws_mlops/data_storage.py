@@ -64,6 +64,26 @@ class DataStorage():
                 pandas.DataFrame
         """
         return self.read(os.path.join(path, filename), header, index_col, low_memory)
+    def local_reads(self, path='/opt/ml/processing/input', prefix_filename='raw_data', header='infer', index_col=None, low_memory=True):
+        """
+        reads all your csv files with that prefix name into a dataframe
+            Arguments:
+                path (str): path where save your dataframe, default /opt/ml/processing/input
+                prefix_filename (str): prefix of file where save your dataframe, default raw_data
+                header (str, int, list of int): row number(s) to use as the column names, and the start of the data, default infer
+                index_col (int, str, sequence of int / str, or False): column(s) to use as the row labels of the DataFrame, default None
+                low_memory (bool): internally process the file in chunks, resulting in lower memory use while parsing, but possibly mixed type inference, default with mixed type inference
+            Returns:
+                pandas.DataFrame
+        """
+        files_list = os.listdir(path)
+        files_list_sorted = [file for file in sorted(files_list)]
+        df = None
+        for filename in files_list_sorted:
+            if filename.startswith(prefix_filename):
+                df = pd.concat([df, self.read(os.path.join(path, filename), header, index_col, low_memory)])
+        df.reset_index(inplace=True)
+        return df
     def restore(self, filename='temporary.csv', s3_url=None, header='infer', index_col=None, low_memory=True):
         """
         restores your dataframe

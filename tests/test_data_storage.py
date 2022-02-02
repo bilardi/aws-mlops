@@ -49,6 +49,12 @@ class TestService(unittest.TestCase, DataStorage):
         df_diff = pd.concat([df_prepared, df_restored]).drop_duplicates(keep=False)
         self.assertTrue(df_diff.empty)
 
+    def test_local_reads(self):
+        df_restored = self.ds.local_reads(self.tmp, 'raw_data.multi.')
+        self.assertEqual(df_restored['col_1'][0], 0)
+        self.assertEqual(df_restored['col_1'][4], 4)
+        self.assertEqual(df_restored['col_1'][8], 8)
+
     def test_create_dataframe_from_dict(self):
         fh = open(self.tmp + '/config.json')
         json_config = json.load(fh)
