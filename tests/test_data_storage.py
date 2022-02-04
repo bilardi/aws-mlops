@@ -49,11 +49,30 @@ class TestService(unittest.TestCase, DataStorage):
         df_diff = pd.concat([df_prepared, df_restored]).drop_duplicates(keep=False)
         self.assertTrue(df_diff.empty)
 
-    def test_local_reads(self):
+    def test_remove_csv_extension(self):
+        self.assertEqual(self.ds.remove_csv_extension('test.csv'), 'test.')
+        self.assertEqual(self.ds.remove_csv_extension('test.'), 'test.')
+        self.assertEqual(self.ds.remove_csv_extension('test'), 'test')
+        with self.ds.s3.open('test.csv') as fs:
+            localpath = self.ds.remove_csv_extension(fs)
+            self.assertEqual(os.path.basename(localpath), 'test.')
+
+    def test_local_save_and_reads(self):
+        data = {'col_1': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 'col_2': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l']}
+        df_prepared = pd.DataFrame.from_dict(data)
+        df_prepared.index.rename('index', inplace=True)
+
         df_restored = self.ds.local_reads(self.tmp, 'raw_data.multi.')
         self.assertEqual(df_restored['col_1'][0], 0)
         self.assertEqual(df_restored['col_1'][4], 4)
         self.assertEqual(df_restored['col_1'][8], 8)
+
+        self.ds.local_save(df_prepared, self.tmp, filename='raw_data.multi.', index=True, chunks=300)
+        df_restored_saved = self.ds.local_reads(self.tmp, 'raw_data.multi.')
+        df_restored_saved.set_index('index', inplace=True)
+
+        df_diff = pd.concat([df_prepared, df_restored_saved]).drop_duplicates(keep=False)
+        self.assertTrue(df_diff.empty)
 
     def test_create_dataframe_from_dict(self):
         fh = open(self.tmp + '/config.json')
@@ -102,6 +121,7 @@ class TestService(unittest.TestCase, DataStorage):
         data = {'target': [0, 1, 2, 3], 'identifier': ['a', 'b', 'c', 'd'], 'col_3': ['f', 's', 't', 'f']}
         df_prepared = pd.DataFrame.from_dict(data)
 
+        # save test files in one file
         df_test = self.ds.save_test(df_prepared)
         self.ds.local_save(df_test, self.tmp, 'test.csv', header=False)
         [columns_names, target, identifier] = self.ds.restore_test()
@@ -122,6 +142,18 @@ class TestService(unittest.TestCase, DataStorage):
         self.assertEqual(df_merged['target'][0], 0)
         self.assertEqual(df_merged['identifier'][0], 'a')
         self.assertEqual(df_merged['col_3'][0], 's')
+
+        data = {'target_splitted': [0, 1, 2, 3], 'identifier_splitted': ['a', 'b', 'c', 'd'], 'col_3': ['f', 's', 't', 'f']}
+        df_prepared = pd.DataFrame.from_dict(data)
+
+        # save test files in more files
+        df_test = self.ds.save_test(df_prepared, columns=['target_splitted', 'identifier_splitted'], chunks=100)
+        [columns_names, target, identifier] = self.ds.restore_test(columns=['target_splitted', 'identifier_splitted'])
+        self.assertEqual(columns_names['list_columns'][0], 'col_3')
+        self.assertEqual(target['target_splitted'][0], 0)
+        self.assertEqual(identifier['identifier_splitted'][0], 'a')
+        self.assertEqual(target['target_splitted'][2], 2)
+        self.assertEqual(identifier['identifier_splitted'][2], 'c')
 
     def test_convert_dtypes(self):
         data = {'i': [0, 1, 2, 3], 'f': [0.1, 0.2, 0.3, 0.4], 'b': [True, False, True, False],

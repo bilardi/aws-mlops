@@ -18,8 +18,11 @@ These properties are mandatory. Here's an example:
 # author Alessandra Bilardi <alessandra.bilardi@gmail.com>
 # see https://github.com/bilardi/aws-mlops for details
 """
+from attr import asdict
 import pandas as pd
+import numpy as np
 import s3fs
+import sys
 import os
 from types import ModuleType
 
@@ -82,8 +85,7 @@ class DataStorage():
         for filename in files_list_sorted:
             if filename.startswith(prefix_filename):
                 df = pd.concat([df, self.read(os.path.join(path, filename), header, index_col, low_memory)])
-        df.reset_index(inplace=True)
-        return df
+        return df.reset_index(drop=True)
     def restore(self, filename='temporary.csv', s3_url=None, header='infer', index_col=None, low_memory=True):
         """
         restores your dataframe
@@ -98,7 +100,21 @@ class DataStorage():
         print('Reading data from {}/{} {} header, {} index column and {} low_memory'.format(s3_url, filename, 'without' if header is None else 'with', 'without' if index_col is [None, False] else 'with', 'without' if low_memory is False else 'with'))
         with self.s3.open(f'{s3_url}/{filename}') as fs:
             return self.read(fs, header, index_col, low_memory)
-    def save(self, dataframe, path=None, header=False, index=False):
+    def remove_csv_extension(self, path):
+        """
+        removes .csv extension and adds a dot
+            Arguments:
+                path (str): path or only name of the file
+            Returns:
+                name without .csv extension and a final dot
+        """
+        if not isinstance(path, str):
+            path = path.name
+        file_segments = os.path.splitext(path)
+        if file_segments[1] == '.csv':
+            path = f'{file_segments[0]}.'
+        return path
+    def save(self, dataframe, path=None, header=False, index=False, chunks=0):
         """
         converts your dataframe into csv format, default in string without header and index
             Arguments:
@@ -106,13 +122,20 @@ class DataStorage():
                 path (str or file handle): path or object where save your dataframe, default None
                 header (bool): formats with or without header, default without
                 index (bool): formats with or without index, default without
+                chunks (int): if you want to upload multi files instead one, byte for each chuck
             Returns:
                 dataframe converted into csv format or nothing
         """
         if not dataframe.empty:
-            return dataframe.to_csv(path, header=header, index=index)#.encode()
+            if chunks:
+                number_of_chunks = sys.getsizeof(dataframe) / chunks
+                path = self.remove_csv_extension(path)
+                for id, chunk in enumerate(np.array_split(dataframe, number_of_chunks)):
+                    chunk.to_csv(f'{path}{id}.csv', header=header, index=index)
+            else:
+                dataframe.to_csv(path, header=header, index=index)#.encode()
         return
-    def local_save(self, dataframe, path='/opt/ml/processing/train', filename='train.csv', header=True, index=False):
+    def local_save(self, dataframe, path='/opt/ml/processing/train', filename='train.csv', header=True, index=False, chunks=0):
         """
         converts your dataframe into csv format, default in string without header and index
             Arguments:
@@ -121,24 +144,36 @@ class DataStorage():
                 filename (str): name of file where save your dataframe, default train.csv
                 header (bool): formats with or without header, default without
                 index (bool): formats with or without index, default without
+                chunks (int): if you want to upload multi files instead one, byte for each chuck
             Returns:
                 dataframe converted into csv format or nothing
         """
         print('Saving data to {}'.format(path + '/' + filename))
-        self.save(dataframe, os.path.join(path, filename), header=header, index=index)
-    def save_on_s3(self, dataframe, filename, s3_url=None, header=True, index=True):
+        self.save(dataframe, os.path.join(path, filename), header=header, index=index, chunks=chunks)
+    def save_on_s3(self, dataframe, filename, s3_url=None, header=True, index=True, chunks=0):
         """
         saves your dataframe into s3
             Arguments:
                 dataframe (pandas.DataFrame): dataframe that you want to save
                 filename (string): filename that you want to save in s3_url
                 s3_url (string): s3 url without filename, default is used that you have passed at the init
+                header (bool): formats with or without header, default without
+                index (bool): formats with or without index, default without
+                chunks (int): if you want to upload multi files instead one, byte for each chuck
         """
         if s3_url is None:
             s3_url = self.s3_url
-        print(f'Saving data to {s3_url}/{filename}')
-        with self.s3.open(f'{s3_url}/{filename}','wb') as fs:
-            self.save(dataframe, fs, header=header, index=index)
+        if chunks:
+            number_of_chunks = sys.getsizeof(dataframe) / chunks
+            prefix = self.remove_csv_extension(filename)
+            for id, chunk in enumerate(np.array_split(dataframe, number_of_chunks)):
+                print(f'Saving data to {s3_url}/{prefix}{id}.csv')
+                with self.s3.open(f'{s3_url}/{prefix}{id}.csv','wb') as fs:
+                    self.save(chunk, fs, header=header, index=index)
+        else:
+            print(f'Saving data to {s3_url}/{filename}')
+            with self.s3.open(f'{s3_url}/{filename}','wb') as fs:
+                self.save(dataframe, fs, header=header, index=index)
     def create_dataframe(self, data, columns_names):
         """
         creates dataframe from config module
@@ -180,7 +215,7 @@ class DataStorage():
             return self.create_dataframe_from_dict(config.dictionary_from_module(config), black_list)
         columns_names = [item for item in dir(config) if not item.startswith("__") and not item in (black_list)]
         return self.create_dataframe(config, columns_names)
-    def save_test(self, test, columns=['target', 'identifier'], s3_url=None):
+    def save_test(self, test, columns=['target', 'identifier'], s3_url=None, chunks=0):
         """
         saves test data: test, columns name without those in columns
             Arguments:
@@ -188,12 +223,13 @@ class DataStorage():
                 test (pandas.DataFrame): data for testing
                 columns (list of string): list of column names
                 s3_url (string): s3 url without filename, default is used that you have passed at the init
+                chunks (int): if you want to upload multi files instead one, byte for each chuck
         """
         if s3_url is None:
             s3_url = self.s3_url
         # save a file for each column in columns
         for column in columns:
-            self.save_on_s3(test[column], f'{column}.csv', s3_url, header=True, index=False)
+            self.save_on_s3(test[column], f'{column}.csv', s3_url, header=True, index=False, chunks=chunks)
             test.drop([column], axis=1, inplace=True)
         # columns names
         columns_names = pd.DataFrame({"list_columns":test.columns})
@@ -214,7 +250,21 @@ class DataStorage():
         datasets_names = ['columns_names'] + columns
         # restore a dataset for each dataset_name in datasets_names
         for dataset_name in datasets_names:
-            datasets.append(self.restore(f'{dataset_name}.csv', s3_url=s3_url))
+            try:
+                # if the dataset is one file
+                datasets.append(self.restore(f'{dataset_name}.csv', s3_url=s3_url))
+            except:
+                # if the dataset is on more files
+                print(f'Not found {dataset_name}.csv')
+                number_of_files = 0
+                try:
+                    dataset = None
+                    while dataset_name:
+                        dataset = pd.concat([dataset, self.restore(f'{dataset_name}.{number_of_files}.csv', s3_url=s3_url)])
+                        number_of_files = number_of_files + 1
+                except:
+                    print(f'Dataset {dataset_name} is composed by {number_of_files} files')
+                datasets.append(dataset.reset_index(drop=True))
         return datasets
     def convert_dtypes(self, dtypes, dataframe):
         """

@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0] - 2022-01-24
+## [1.2.0] - 2022-02-04
+
+### Added
+- chunks management in DataStorage class
+
+## [1.1.0] - 2022-02-02
 
 ### Added
 - local_reads method in DataStorage class
@@ -75,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the init files of package and tests
 - the documentation by sphinx
 
-[Unreleased]: https://github.com/bilardi/aws-saving/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/bilardi/aws-saving/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/bilardi/aws-saving/releases/tag/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/bilardi/aws-saving/releases/tag/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/bilardi/aws-saving/releases/tag/v0.3.0...v1.0.0
 [0.3.0]: https://github.com/bilardi/aws-saving/releases/tag/v0.2.2...v0.3.0
