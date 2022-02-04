@@ -100,6 +100,19 @@ class DataStorage():
         print('Reading data from {}/{} {} header, {} index column and {} low_memory'.format(s3_url, filename, 'without' if header is None else 'with', 'without' if index_col is [None, False] else 'with', 'without' if low_memory is False else 'with'))
         with self.s3.open(f'{s3_url}/{filename}') as fs:
             return self.read(fs, header, index_col, low_memory)
+    def get_number_of_chunks(self, dataframe, chunks=0):
+        """
+        gets number of chunks
+            Arguments:
+                dataframe (pandas.DataFrame): dataframe that you want to convert
+                chunks (int): if you want to upload multi files instead one, byte for each chuck
+            Returns:
+                number of chunks
+        """
+        number_of_chunks = sys.getsizeof(dataframe) / chunks
+        if number_of_chunks < 1:
+            number_of_chunks = 1
+        return number_of_chunks
     def remove_csv_extension(self, path):
         """
         removes .csv extension and adds a dot
@@ -128,7 +141,7 @@ class DataStorage():
         """
         if not dataframe.empty:
             if chunks:
-                number_of_chunks = sys.getsizeof(dataframe) / chunks
+                number_of_chunks = self.get_number_of_chunks(dataframe, chunks)
                 path = self.remove_csv_extension(path)
                 for id, chunk in enumerate(np.array_split(dataframe, number_of_chunks)):
                     chunk.to_csv(f'{path}{id}.csv', header=header, index=index)
@@ -164,7 +177,7 @@ class DataStorage():
         if s3_url is None:
             s3_url = self.s3_url
         if chunks:
-            number_of_chunks = sys.getsizeof(dataframe) / chunks
+            number_of_chunks = self.get_number_of_chunks(dataframe, chunks)
             prefix = self.remove_csv_extension(filename)
             for id, chunk in enumerate(np.array_split(dataframe, number_of_chunks)):
                 print(f'Saving data to {s3_url}/{prefix}{id}.csv')

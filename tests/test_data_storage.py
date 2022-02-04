@@ -67,6 +67,8 @@ class TestService(unittest.TestCase, DataStorage):
         self.assertEqual(df_restored['col_1'][4], 4)
         self.assertEqual(df_restored['col_1'][8], 8)
 
+        self.ds.local_save(df_prepared, self.tmp, filename='raw_data.multi.', index=True, chunks=10485760)
+
         self.ds.local_save(df_prepared, self.tmp, filename='raw_data.multi.', index=True, chunks=300)
         df_restored_saved = self.ds.local_reads(self.tmp, 'raw_data.multi.')
         df_restored_saved.set_index('index', inplace=True)
