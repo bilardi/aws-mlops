@@ -92,6 +92,9 @@ class DataStorage():
             Arguments:
                 filename (string): filename that you have saved in s3_url
                 s3_url (string): s3 url without filename, default is used that you have passed at the init
+                header (str, int, list of int): row number(s) to use as the column names, and the start of the data, default infer
+                index_col (int, str, sequence of int / str, or False): column(s) to use as the row labels of the DataFrame, default None
+                low_memory (bool): internally process the file in chunks, resulting in lower memory use while parsing, but possibly mixed type inference, default with mixed type inference
             Returns:
                 pandas.DataFrame without header
         """
@@ -100,6 +103,28 @@ class DataStorage():
         print('Reading data from {}/{} {} header, {} index column and {} low_memory'.format(s3_url, filename, 'without' if header is None else 'with', 'without' if index_col is [None, False] else 'with', 'without' if low_memory is False else 'with'))
         with self.s3.open(f'{s3_url}/{filename}') as fs:
             return self.read(fs, header, index_col, low_memory)
+    def restores(self, prefix_filename='raw_data', s3_url=None, header='infer', index_col=None, low_memory=True):
+        """
+        restores your dataframe
+            Arguments:
+                prefix_filename (string): filename or prefix that you have saved in s3_url
+                s3_url (string): s3 url without filename, default is used that you have passed at the init
+                header (str, int, list of int): row number(s) to use as the column names, and the start of the data, default infer
+                index_col (int, str, sequence of int / str, or False): column(s) to use as the row labels of the DataFrame, default None
+                low_memory (bool): internally process the file in chunks, resulting in lower memory use while parsing, but possibly mixed type inference, default with mixed type inference
+            Returns:
+                pandas.DataFrame without header
+        """
+        if s3_url is None:
+            s3_url = self.s3_url
+        dataset = []
+        print('Reading data from {}/{} {} header, {} index column and {} low_memory'.format(s3_url, prefix_filename, 'without' if header is None else 'with', 'without' if index_col is [None, False] else 'with', 'without' if low_memory is False else 'with'))
+        for s3_url_complete in sorted(self.s3.find(s3_url, prefix = prefix_filename)):
+            dataframe = None
+            with self.s3.open(s3_url_complete) as fs:
+                dataframe = self.read(fs, header, index_col, low_memory)
+                dataset.append(dataframe)
+        return pd.concat(dataset)
     def get_number_of_chunks(self, dataframe, chunks=0):
         """
         gets number of chunks

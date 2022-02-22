@@ -10,6 +10,13 @@ class s3fs_for_testing():
     def __init__(self, *args, **kwargs):
         self.tmp = os.path.dirname(os.path.realpath(__file__))
 
+    def find(self, s3_url, prefix='raw_data'):
+        paths = []
+        for file in sorted(os.listdir("./tests/")):
+            if file.startswith(prefix):
+                paths.append(file)
+        return paths
+
     def open(self, s3_url, mode='rb'):
         filename = os.path.basename(s3_url)
         path = os.path.join(self.tmp, filename)
@@ -36,6 +43,13 @@ class TestService(unittest.TestCase, DataStorage):
 
         df_diff = pd.concat([df_prepared, df_restored]).drop_duplicates(keep=False)
         self.assertTrue(df_diff.empty)
+
+    def test_restores(self):
+        df_restored = self.ds.restores('raw_data.multi.')
+        df_restored.set_index('index', inplace=True)
+        self.assertEqual(df_restored['col_1'][0], 0)
+        self.assertEqual(df_restored['col_1'][4], 4)
+        self.assertEqual(df_restored['col_1'][8], 8)
 
     def test_local_save_and_read(self):
         data = {'col_1': [0, 1, 2, 3], 'col_2': ['a', 'b', 'c', 'd']}
